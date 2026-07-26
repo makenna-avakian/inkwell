@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Inkwell
+
+A commission-first marketplace for artists — buyers browse shops, read published commission rules, and request custom work; sellers manage their shop, rules, and incoming requests; payments run through Stripe Connect with escrow-style delayed capture.
+
+This repository (`shareart-frontend`) is the entire application (UI + API) — see [`aidlc-docs/inception/requirements/requirements.md`](aidlc-docs/inception/requirements/requirements.md) for the full architecture decision record. The sibling `shareart-backend` repository has been retired.
+
+Built with the [AI-DLC](aidlc-docs/aidlc-state.md) workflow — see `aidlc-docs/` for the complete requirements, design, and construction history.
 
 ## Getting Started
 
-First, run the development server:
+1. Copy `.env.example` to `.env.local` and fill in:
+   - `DATABASE_URL` — a Neon Postgres connection string
+   - `AUTH_SECRET` — generate with `npx auth secret`
+   - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` — from a Google Cloud OAuth client
+   - `CRON_SECRET` — any long random string (protects the cleanup cron endpoint)
+   - `SENTRY_DSN` — optional for local dev
+
+2. Install dependencies and run migrations:
+   ```bash
+   npm install
+   npm run db:generate
+   npm run db:migrate
+   ```
+
+3. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
+
+## Testing
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm test              # unit + component + property-based tests
+npm run test:coverage # with coverage report (80% gate — see aidlc-docs requirements.md NFR-3)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Integration tests against a real database (`src/server/auth/repository.test.ts` and similar) are skipped automatically unless `DATABASE_URL` is set to a test database.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/` — routes and UI only
+- `src/server/{unit}/` — business logic, repository, and config per unit (e.g. `src/server/auth/`)
+- `aidlc-docs/` — the complete AI-DLC requirements/design/construction record for this project
 
-## Learn More
+## Current Status
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Phase 1 (MVP) is in progress. Unit 1 (Auth & Accounts) is implemented; Units 2-6 (Shops & Commission Rules, Listings, Browse & Discovery, Commission Requests & Messaging, Orders & Payments) are not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.

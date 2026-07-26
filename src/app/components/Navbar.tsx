@@ -1,36 +1,46 @@
-"use client";
-
 import Link from "next/link";
+import { auth } from "@/server/auth/config";
+import { signOutAction } from "@/app/components/auth/sign-out-action";
 
-export default function Navbar() {
+/**
+ * Minimal Phase 1 navbar (Unit 1 scope only) — Sign In/Sign Up when logged
+ * out, display name + Sign Out when logged in. Marketplace navigation links
+ * (Browse, Shops, etc.) are added by later units as those pages exist.
+ */
+export default async function Navbar() {
+  const session = await auth();
+
   return (
-    <header className="fixed top-0 left-0 w-full bg-white border-b-4 border-black z-40">
-      <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-        {/* Logo / Name */}
+    <header className="fixed top-0 left-0 z-40 w-full border-b border-gray-200 bg-white">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-2xl font-bold text-black">
-          Makenna Avakian
+          Inkwell
         </Link>
 
-        {/* Links */}
-        <div className="flex gap-6 font-bold text-lg">
-          <Link
-            href="/gallery"
-            className="text-gray-700 hover:text-black transition"
-          >
-            Gallery
-          </Link>
-          <Link
-            href="/contact"
-            className="text-gray-700 hover:text-black transition"
-          >
-            Commisions
-          </Link>
-          <Link
-            href="/design"
-            className="text-gray-700 hover:text-black transition"
-          >
-            Like this website?
-          </Link>
+        <div className="flex items-center gap-4 text-sm font-medium">
+          {session?.user ? (
+            <>
+              <span data-testid="navbar-display-name">{session.user.name}</span>
+              <form action={signOutAction}>
+                <button type="submit" data-testid="navbar-sign-out-button">
+                  Sign out
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <Link href="/sign-in" data-testid="navbar-sign-in-link">
+                Sign in
+              </Link>
+              <Link
+                href="/sign-up"
+                data-testid="navbar-sign-up-link"
+                className="rounded-lg bg-black px-4 py-2 text-white"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </header>

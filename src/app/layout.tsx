@@ -13,7 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Makenna Avakian Art",
+  title: "Inkwell",
+  description: "A commission-first marketplace for artists.",
 };
 
 export default function RootLayout({
