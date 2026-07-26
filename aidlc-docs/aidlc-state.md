@@ -66,6 +66,7 @@ Build sequence: 1. Auth & Accounts → 2. Shops & Commission Rules → 3. Listin
 
 ## Project-Wide Infrastructure Decisions (decided at Unit 1 Infrastructure Design; see construction/shared-infrastructure.md)
 - Managed Postgres: Neon. Environments: dev/staging/prod (staging via Neon branch). Scheduled jobs: Vercel Cron. Observability: Vercel built-in + Sentry.
+- Object storage (decided at Unit 2 NFR Requirements): Cloudflare R2, S3-compatible SDK, next/image for delivery, presigned direct-to-storage uploads.
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Placeholder

@@ -412,3 +412,35 @@
 **Context**: CONSTRUCTION - Unit 2, Functional Design, Step 7, awaiting user approval.
 
 ---
+
+## Unit 2 (Shops & Commission Rules) — Functional Design Approved
+**Timestamp**: 2026-07-26T05:00:00Z
+**User Input**: "lets commit and Continue to Next Stage"
+**AI Response**: Functional Design approved. Committed Unit 2 Functional Design artifacts to `main` (7 files, +290) per user request — not pushed. Proceeding to NFR Requirements for Unit 2.
+**Context**: CONSTRUCTION - Unit 2, Functional Design complete; transitioning to NFR Requirements.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — NFR Requirements Plan Issued
+**Timestamp**: 2026-07-26T05:05:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-2-shops-nfr-requirements-plan.md` with 3 questions: object storage provider (Cloudflare R2 vs. S3, left open in requirements.md — decided here as project-wide, first needed by Unit 2), image optimization approach (next/image vs. dedicated resize pipeline), upload flow (direct-to-storage presigned URL vs. proxy-through-server). Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 2, NFR Requirements, Step 4 gate.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — NFR Requirements Answers Received
+**Timestamp**: 2026-07-26T05:10:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (Cloudflare R2), Q2=A (next/image, no dedicated resize pipeline), Q3=A (direct-to-storage presigned URL uploads). No ambiguities. Proceeding to generate NFR Requirements artifacts.
+**Context**: CONSTRUCTION - Unit 2, NFR Requirements, Step 6 (artifact generation).
+
+---
+
+## Unit 2 (Shops & Commission Rules) — NFR Requirements Complete
+**Timestamp**: 2026-07-26T05:15:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `nfr-requirements.md` and `tech-stack-decisions.md` (R2, AWS S3 SDK for R2 compatibility, next/image, presigned direct uploads, jsonb storage for tiers/addOns/rulesContent). Updated `aidlc-state.md` with the object-storage project-wide decision.
+**Context**: CONSTRUCTION - Unit 2, NFR Requirements, Step 7, awaiting user approval.
+
+---
