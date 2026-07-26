@@ -45,6 +45,8 @@ const LISTING = {
   description: null,
   priceCents: 5000,
   status: "available" as const,
+  medium: null,
+  styleTags: [],
   createdAt: new Date(),
 };
 

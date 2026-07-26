@@ -1,0 +1,67 @@
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { getShopPageData } from "@/server/discovery/service";
+import BlockRenderer from "./BlockRenderer";
+import ListingCard from "./ListingCard";
+import type { ContentBlock } from "@/server/shops/blocks";
+
+interface PublicShopPageProps {
+  shopId: string;
+}
+
+export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
+  const data = await getShopPageData(shopId);
+  if (!data) notFound();
+
+  const { shop, portfolio, publishedRules, availableListings } = data;
+
+  return (
+    <main data-testid="public-shop-page" className="mx-auto max-w-4xl p-8 pt-32">
+      {shop.bannerImageUrl && (
+        <Image src={shop.bannerImageUrl} alt="" width={1200} height={300} className="w-full rounded-lg object-cover" />
+      )}
+      <div className="mt-4 flex items-center gap-4">
+        {shop.avatarImageUrl && (
+          <Image src={shop.avatarImageUrl} alt="" width={80} height={80} className="rounded-full" />
+        )}
+        <h1 className="text-3xl font-bold">{shop.displayName}</h1>
+        {publishedRules && (
+          <span data-testid="public-shop-page-slot-state" className="rounded-full border px-3 py-1 text-sm">
+            {publishedRules.slotState}
+          </span>
+        )}
+      </div>
+      {shop.bio && <p className="mt-4">{shop.bio}</p>}
+
+      <h2 className="mt-10 mb-4 text-xl font-semibold">Portfolio</h2>
+      <div className="grid grid-cols-3 gap-4">
+        {portfolio.map((image) => (
+          <Image key={image.id} src={image.imageUrl} alt="" width={200} height={200} className="rounded-lg object-cover" />
+        ))}
+      </div>
+
+      <h2 className="mt-10 mb-4 text-xl font-semibold">Commission Rules</h2>
+      {publishedRules ? (
+        <BlockRenderer blocks={publishedRules.version.rulesContent as ContentBlock[]} />
+      ) : (
+        <p data-testid="public-shop-page-no-rules">This shop hasn&apos;t published commission rules yet.</p>
+      )}
+
+      <h2 className="mt-10 mb-4 text-xl font-semibold">Available Now</h2>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {availableListings.map((listing) => (
+          <ListingCard
+            key={listing.id}
+            listingId={listing.id}
+            title={listing.title}
+            priceCents={listing.priceCents}
+            imageUrl={null}
+            shopId={shop.id}
+            shopDisplayName={shop.displayName}
+            shopSlotState={publishedRules?.slotState ?? "closed"}
+          />
+        ))}
+      </div>
+    </main>
+  );
+}

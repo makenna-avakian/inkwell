@@ -13,6 +13,8 @@ interface ListingEditFormProps {
   initialDescription?: string;
   initialPriceCents: number;
   initialStatus: "available" | "sold" | "removed";
+  initialMedium?: string;
+  initialStyleTags?: string[];
 }
 
 const initialState: ListingActionState = { fieldErrors: {} };
@@ -23,6 +25,8 @@ export default function ListingEditForm({
   initialDescription,
   initialPriceCents,
   initialStatus,
+  initialMedium,
+  initialStyleTags = [],
 }: ListingEditFormProps) {
   const action = updateListingAction.bind(null, listingId);
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -58,6 +62,18 @@ export default function ListingEditForm({
           name="description"
           defaultValue={initialDescription}
           data-testid="listing-edit-form-description-input"
+          className="w-full rounded border border-gray-300 p-2"
+        />
+        <input
+          name="medium"
+          defaultValue={initialMedium}
+          data-testid="listing-edit-form-medium-input"
+          className="w-full rounded border border-gray-300 p-2"
+        />
+        <input
+          name="styleTags"
+          defaultValue={initialStyleTags.join(", ")}
+          data-testid="listing-edit-form-style-tags-input"
           className="w-full rounded border border-gray-300 p-2"
         />
         <input

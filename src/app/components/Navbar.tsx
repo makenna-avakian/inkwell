@@ -3,9 +3,12 @@ import { auth } from "@/server/auth/config";
 import { signOutAction } from "@/app/components/auth/sign-out-action";
 
 /**
- * Minimal Phase 1 navbar (Unit 1 scope only) — Sign In/Sign Up when logged
- * out, display name + Sign Out when logged in. Marketplace navigation links
- * (Browse, Shops, etc.) are added by later units as those pages exist.
+ * Navbar — Browse/Search links added by Unit 4 (Discovery). Seller-specific
+ * links (Shop, Listings) are only shown for signed-in sellers once Unit 2/3
+ * pages exist for them; kept as plain always-visible links for Phase 1
+ * simplicity rather than gating on isSeller (a signed-out or non-seller user
+ * just gets redirected by those pages' own auth checks, per Unit 2/3's
+ * page-level redirect logic).
  */
 export default async function Navbar() {
   const session = await auth();
@@ -17,7 +20,19 @@ export default async function Navbar() {
           Inkwell
         </Link>
 
-        <div className="flex items-center gap-4 text-sm font-medium">
+        <div className="flex items-center gap-6 text-sm font-medium">
+          <Link href="/gallery" data-testid="navbar-gallery-link">
+            Browse
+          </Link>
+          <Link href="/search" data-testid="navbar-search-link">
+            Find an artist
+          </Link>
+          {session?.user && (
+            <Link href="/shop" data-testid="navbar-shop-link">
+              My shop
+            </Link>
+          )}
+
           {session?.user ? (
             <>
               <span data-testid="navbar-display-name">{session.user.name}</span>

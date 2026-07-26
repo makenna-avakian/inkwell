@@ -24,6 +24,8 @@ export default async function ListingDetailPage({
         initialDescription={listing.description ?? undefined}
         initialPriceCents={listing.priceCents}
         initialStatus={listing.status}
+        initialMedium={listing.medium ?? undefined}
+        initialStyleTags={listing.styleTags as string[]}
       />
     </main>
   );

@@ -39,11 +39,14 @@ export const createListingSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   priceCents: z.number().int().nonnegative(), // BR-1: non-negative, zero allowed
+  // Unit 4 (Discovery) addition — see unit-4-discovery/functional-design/domain-entities.md
+  medium: z.string().optional(),
+  styleTags: z.array(z.string()).default([]),
 });
 
 export async function createListing(
   shopId: string,
-  input: z.infer<typeof createListingSchema>,
+  input: z.input<typeof createListingSchema>,
 ): Promise<Listing> {
   let parsed: z.infer<typeof createListingSchema>;
   try {
@@ -59,13 +62,15 @@ export async function createListing(
     title: parsed.title,
     description: parsed.description ?? null,
     priceCents: parsed.priceCents,
+    medium: parsed.medium ?? null,
+    styleTags: parsed.styleTags,
   });
 }
 
 export async function updateListing(
   listingId: string,
   callerId: string,
-  patch: Partial<z.infer<typeof createListingSchema>>,
+  patch: Partial<z.input<typeof createListingSchema>>,
 ): Promise<Listing> {
   await assertListingOwner(listingId, callerId);
   if (patch.priceCents !== undefined && patch.priceCents < 0) {

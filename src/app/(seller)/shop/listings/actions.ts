@@ -19,6 +19,14 @@ async function requireSession() {
   return session.user.id;
 }
 
+/** Style tags are entered as a comma-separated field in the form. */
+function parseStyleTags(formData: FormData): string[] {
+  return String(formData.get("styleTags") ?? "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
 export interface ListingActionState {
   fieldErrors: Record<string, string>;
   formError?: string;
@@ -35,6 +43,8 @@ export async function createListingAction(
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? "") || undefined,
       priceCents: Math.round(Number(formData.get("price") ?? 0) * 100),
+      medium: String(formData.get("medium") ?? "") || undefined,
+      styleTags: parseStyleTags(formData),
     });
   } catch (error) {
     if (error instanceof ListingValidationError) {
@@ -56,6 +66,8 @@ export async function updateListingAction(
       title: String(formData.get("title") ?? ""),
       description: String(formData.get("description") ?? "") || undefined,
       priceCents: Math.round(Number(formData.get("price") ?? 0) * 100),
+      medium: String(formData.get("medium") ?? "") || undefined,
+      styleTags: parseStyleTags(formData),
     });
   } catch (error) {
     if (error instanceof ListingValidationError || error instanceof NotListingOwnerError) {

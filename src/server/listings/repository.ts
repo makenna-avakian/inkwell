@@ -35,7 +35,9 @@ export async function createListingRow(input: NewListing): Promise<Listing> {
 
 export async function updateListingRow(
   listingId: string,
-  patch: Partial<Pick<NewListing, "title" | "description" | "priceCents">>,
+  patch: Partial<
+    Pick<NewListing, "title" | "description" | "priceCents" | "medium" | "styleTags">
+  >,
 ): Promise<Listing> {
   const [listing] = await db
     .update(listings)

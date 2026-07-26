@@ -620,3 +620,91 @@
 **Context**: CONSTRUCTION - Unit 3, Code Generation, awaiting user approval.
 
 ---
+
+## Unit 3 (Listings) — Approved; Unit 3 COMPLETE
+**Timestamp**: 2026-07-26T07:55:00Z
+**User Input**: "commit, then Continue"
+**AI Response**: Approved. Committed to `main` (33 files, +1341/-3). Unit 3 is now fully complete. Proceeding to Unit 4: Browse & Discovery.
+**Context**: CONSTRUCTION - Unit 3 complete; transitioning to Unit 4.
+
+---
+
+## Unit 4 (Browse & Discovery) — Functional Design Plan Issued (data gap found)
+**Timestamp**: 2026-07-26T08:00:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-4-discovery-functional-design-plan.md`. Found a real gap while analyzing this unit: requirements.md FR-3 promises browse filtering by "medium, style tag, price range, and commission availability," but neither Unit 2's nor Unit 3's domain model has a medium/styleTags field — missed during those units' design. Flagged as Question 1 rather than silently dropping the feature or silently patching Unit 3's schema without asking. Also asked about search implementation, pagination approach, and the exact definition of "commission availability." Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 4, Functional Design, Step 4 gate.
+
+---
+
+## Unit 4 (Browse & Discovery) — Functional Design Answers Received
+**Timestamp**: 2026-07-26T08:05:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (add `medium`/`styleTags` to Listing — a small migration touching Unit 3's table), Q2=B (Postgres full-text search via `tsvector`/`tsquery`, computed at query time rather than a cross-table generated column, since bio lives on ShopProfile and displayName on User), Q3=A (offset/page pagination), Q4=B (`open` OR `waitlist` both count as "commission availability"). No ambiguities. Proceeding to generate artifacts.
+**Context**: CONSTRUCTION - Unit 4, Functional Design, Step 6 (artifact generation).
+
+---
+
+## Unit 4 (Browse & Discovery) — Functional Design Complete
+**Timestamp**: 2026-07-26T08:15:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `domain-entities.md` (Listing schema addition: medium/styleTags; FeedItem/ShopSearchResult/ShopPageData read models), `business-logic-model.md` (browseFeed, searchShops via query-time full-text search, getShopPageData reusing Units 2/3's read functions), `business-rules.md` (BR-1..BR-6 + PBT-01), `frontend-components.md` (this unit builds the deferred public-facing UI: BrowseFeed, ShopSearch, PublicShopPage, BlockRenderer as the read-only counterpart to Unit 2's BlockEditor).
+**Context**: CONSTRUCTION - Unit 4, Functional Design, Step 7, awaiting user approval.
+
+---
+
+## Unit 4 (Browse & Discovery) — Functional Design Approved; NFR Requirements Plan Issued
+**Timestamp**: 2026-07-26T08:20:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Functional Design approved. Created `unit-4-discovery-nfr-requirements-plan.md` with 2 questions specific to this being the first buyer-facing performance-sensitive surface: an explicit latency target, and caching/revalidation strategy (always-fresh vs. ISR). Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 4, NFR Requirements, Step 4 gate.
+
+---
+
+## Unit 4 (Browse & Discovery) — NFR Requirements Answers Received
+**Timestamp**: 2026-07-26T08:25:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (p95 < 500ms), Q2=A (always fresh, no ISR caching for Phase 1). No ambiguities. Proceeding to generate NFR Requirements artifacts.
+**Context**: CONSTRUCTION - Unit 4, NFR Requirements, Step 6 (artifact generation).
+
+---
+
+## Unit 4 (Browse & Discovery) — NFR Requirements, NFR Design & Infrastructure Design Complete
+**Timestamp**: 2026-07-26T08:35:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated NFR Requirements (500ms target, always-fresh rendering, Postgres FTS as the search tech choice), NFR Design (indexing strategy for the 500ms target, fail-safe default for malformed filter params), and Infrastructure Design (schema migration + new indexes, no new infra/environment variables). No further questions needed at NFR Design/Infrastructure Design — all resolved at Functional Design/NFR Requirements or inherited project-wide. Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 4, design stages complete, awaiting user approval to proceed to Code Generation.
+
+---
+
+## Unit 4 (Browse & Discovery) — Design Stages Approved
+**Timestamp**: 2026-07-26T08:40:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Approved. Proceeding to Code Generation planning for Unit 4.
+**Context**: CONSTRUCTION - Unit 4 design stages complete; transitioning to Code Generation.
+
+---
+
+## Unit 4 (Browse & Discovery) — Code Generation Plan Issued
+**Timestamp**: 2026-07-26T08:45:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-4-discovery-code-generation-plan.md` — 14 steps, including Step 3's explicit cross-unit extension of Unit 3's `service.ts`/`ListingEditForm`/`ListingManager` to support the new `medium`/`styleTags` fields. Presented to user for plan approval before generation begins.
+**Context**: CONSTRUCTION - Unit 4, Code Generation Part 1 (Planning), gate.
+
+---
+
+## Unit 4 (Browse & Discovery) — Code Generation Plan Approved
+**Timestamp**: 2026-07-26T08:50:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: Plan approved. Beginning Part 2 Generation.
+**Context**: CONSTRUCTION - Unit 4, Code Generation Part 2 (Generation) starting.
+
+---
+
+## Unit 4 (Browse & Discovery) — Code Generation Complete
+**Timestamp**: 2026-07-26T09:00:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Executed all 14 steps: extended `db/schema.ts` with `listings.medium`/`listings.styleTags` (Step 3 cross-unit extension of Unit 3's `service.ts`/`ListingEditForm`/`ListingManager`), business logic (`filters.ts` pure predicates, `repository.ts` with joined queries + raw-SQL full-text search, `service.ts`), the first public-facing frontend (`BrowseFeed`, `FilterPanel`, `ListingCard`, `Pagination`, `ShopSearch`, `SearchBar`, `BlockRenderer`, `PublicShopPage` + 3 new routes), and updated `Navbar.tsx` with Browse/Search links. Ran full verification: `tsc --noEmit` (found and fixed a real type issue — `createListingSchema`'s Zod `.default()` field made `z.infer` require `styleTags` even though the intent was optional-with-default; switched the function signatures to `z.input` so callers can still omit it, and updated Unit 3's test fixture), `eslint` (clean), `vitest run` (98 passed, 14 skipped), `next build` (succeeds, 13 routes). Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 4, Code Generation, awaiting user approval.
+
+---

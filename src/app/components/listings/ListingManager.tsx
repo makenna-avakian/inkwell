@@ -56,6 +56,18 @@ export default function ListingManager({ shopId, initialListings }: ListingManag
           className="w-full rounded border border-gray-300 p-2"
         />
         <input
+          name="medium"
+          placeholder="Medium (e.g. Watercolor)"
+          data-testid="listing-manager-medium-input"
+          className="w-full rounded border border-gray-300 p-2"
+        />
+        <input
+          name="styleTags"
+          placeholder="Style tags, comma-separated (e.g. pet portrait, landscape)"
+          data-testid="listing-manager-style-tags-input"
+          className="w-full rounded border border-gray-300 p-2"
+        />
+        <input
           name="price"
           type="number"
           step="0.01"

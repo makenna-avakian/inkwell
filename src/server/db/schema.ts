@@ -149,6 +149,9 @@ export const listings = pgTable("listings", {
   status: text("status", { enum: ["available", "sold", "removed"] })
     .notNull()
     .default("available"),
+  // Unit 4 (Discovery) addition — see unit-4-discovery/functional-design/domain-entities.md
+  medium: text("medium"),
+  styleTags: jsonb("style_tags").notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
