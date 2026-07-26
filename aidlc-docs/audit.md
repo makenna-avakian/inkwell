@@ -444,3 +444,35 @@
 **Context**: CONSTRUCTION - Unit 2, NFR Requirements, Step 7, awaiting user approval.
 
 ---
+
+## Unit 2 (Shops & Commission Rules) — NFR Requirements Approved
+**Timestamp**: 2026-07-26T05:20:00Z
+**User Input**: "commit and Continue to Next Stage"
+**AI Response**: NFR Requirements approved. Committed to `main` (5 files, +119) per user request. Proceeding to NFR Design for Unit 2.
+**Context**: CONSTRUCTION - Unit 2, NFR Requirements complete; transitioning to NFR Design.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — NFR Design Plan Issued
+**Timestamp**: 2026-07-26T05:25:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-2-shops-nfr-design-plan.md` with a single question: whether the R2 presigned-URL-generation call should reuse Unit 1's timeout/retry convention. Noted project-wide resiliency process decisions (CI/CD, rollback, etc.) are already fixed and not re-asked. Presented to user; awaiting answer.
+**Context**: CONSTRUCTION - Unit 2, NFR Design, Step 4 gate.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — NFR Design Answer Received
+**Timestamp**: 2026-07-26T05:30:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (reuse Unit 1's 5s timeout / one-retry-at-100ms convention for the R2 presigned-URL call). Proceeding to generate NFR Design artifacts.
+**Context**: CONSTRUCTION - Unit 2, NFR Design, Step 6 (artifact generation).
+
+---
+
+## Unit 2 (Shops & Commission Rules) — NFR Design Complete
+**Timestamp**: 2026-07-26T05:35:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `nfr-design-patterns.md` (R2 timeout/retry, no circuit breaker, fail-safe defaults for upload failures and unpublished-rules state) and `logical-components.md` (no CDN/queue/cache needed; new Postgres tables share Unit 1's Neon client). Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 2, NFR Design, Step 7, awaiting user approval.
+
+---
