@@ -14,6 +14,7 @@ Built with the [AI-DLC](aidlc-docs/aidlc-state.md) workflow — see `aidlc-docs/
    - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` — from a Google Cloud OAuth client
    - `CRON_SECRET` — any long random string (protects the cleanup cron endpoint)
    - `SENTRY_DSN` — optional for local dev
+   - `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET_NAME` / `R2_PUBLIC_URL` — Cloudflare R2 credentials for shop/portfolio image uploads (see `aidlc-docs/construction/shared-infrastructure.md`)
 
 2. Install dependencies and run migrations:
    ```bash
@@ -45,4 +46,4 @@ Integration tests against a real database (`src/server/auth/repository.test.ts` 
 
 ## Current Status
 
-Phase 1 (MVP) is in progress. Unit 1 (Auth & Accounts) is implemented; Units 2-6 (Shops & Commission Rules, Listings, Browse & Discovery, Commission Requests & Messaging, Orders & Payments) are not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.
+Phase 1 (MVP) is in progress. Units 1-2 (Auth & Accounts; Shops & Commission Rules) are implemented; Units 3-6 (Listings, Browse & Discovery, Commission Requests & Messaging, Orders & Payments) are not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.

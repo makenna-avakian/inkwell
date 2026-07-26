@@ -1,5 +1,7 @@
 import {
   boolean,
+  integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -58,3 +60,77 @@ export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;
 export type OAuthAccount = typeof oauthAccounts.$inferSelect;
 export type LoginAttempt = typeof loginAttempts.$inferSelect;
+
+// --- Unit 2: Shops & Commission Rules ---
+// See aidlc-docs/construction/unit-2-shops/functional-design/domain-entities.md
+
+export const shopProfiles = pgTable("shop_profiles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  bannerImageUrl: text("banner_image_url"),
+  avatarImageUrl: text("avatar_image_url"),
+  bio: text("bio"),
+  // Array of { label: string, url: string }
+  socialLinks: jsonb("social_links").notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const portfolioImages = pgTable("portfolio_images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  shopId: uuid("shop_id")
+    .notNull()
+    .references(() => shopProfiles.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),
+  position: integer("position").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+/** Append-only — never updated or deleted (BR-4). */
+export const commissionRuleVersions = pgTable("commission_rule_versions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  shopId: uuid("shop_id")
+    .notNull()
+    .references(() => shopProfiles.id, { onDelete: "cascade" }),
+  version: integer("version").notNull(),
+  // Array of { id: string, name: string, description: string, priceCents: number }
+  tiers: jsonb("tiers").notNull(),
+  // Array of { id: string, name: string, priceDeltaCents: number }
+  addOns: jsonb("add_ons").notNull(),
+  // Array of ContentBlock (see domain-entities.md's Block Schema)
+  rulesContent: jsonb("rules_content").notNull(),
+  publishedAt: timestamp("published_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const shopCommissionSettings = pgTable("shop_commission_settings", {
+  shopId: uuid("shop_id")
+    .primaryKey()
+    .references(() => shopProfiles.id, { onDelete: "cascade" }),
+  currentVersionId: uuid("current_version_id").references(
+    () => commissionRuleVersions.id,
+  ),
+  slotState: text("slot_state", {
+    enum: ["open", "closed", "waitlist"],
+  })
+    .notNull()
+    .default("closed"),
+  maxQueue: integer("max_queue"),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type ShopProfile = typeof shopProfiles.$inferSelect;
+export type NewShopProfile = typeof shopProfiles.$inferInsert;
+export type PortfolioImage = typeof portfolioImages.$inferSelect;
+export type CommissionRuleVersion = typeof commissionRuleVersions.$inferSelect;
+export type NewCommissionRuleVersion = typeof commissionRuleVersions.$inferInsert;
+export type ShopCommissionSettings = typeof shopCommissionSettings.$inferSelect;

@@ -7,6 +7,7 @@ import {
   getRecentLoginAttempts,
   recordLoginAttempt,
 } from "@/server/auth/repository";
+import { isSeller } from "@/server/shops/service";
 
 /** BR-1: email format validation. BR-2: password minimum length (breach-list
  *  check happens server-side in Auth.js's Credentials `authorize`, not here,
@@ -86,11 +87,9 @@ export async function recordLoginAttemptOutcome(
 }
 
 /**
- * NOTE (cross-unit forward reference): `isSeller(userId)` is specified in
- * business-logic-model.md as deriving seller capability from ShopProfile
- * existence. ShopProfile belongs to Unit 2 (Shops & Commission Rules), which
- * has not been built yet in this sequential Construction pass. This function
- * will be added here once Unit 2's schema exists — see
- * aidlc-docs/construction/unit-1-auth/functional-design/business-logic-model.md
- * and aidlc-docs/inception/application-design/unit-of-work-dependency.md.
+ * BR-8 (this module) / BR-8 (unit-2-shops): re-exported so callers can keep
+ * using `isSeller` from the Auth module as originally specified in
+ * business-logic-model.md — Unit 2 supplies the actual implementation
+ * (ShopProfile existence check) now that its schema exists.
  */
+export { isSeller };

@@ -508,3 +508,35 @@
 **Context**: CONSTRUCTION - Unit 2, Infrastructure Design, Step 7, awaiting user approval.
 
 ---
+
+## Unit 2 (Shops & Commission Rules) — Infrastructure Design Approved
+**Timestamp**: 2026-07-26T06:00:00Z
+**User Input**: "commit and Continue to Next Stage"
+**AI Response**: Infrastructure Design approved. Committed to `main` (6 files, +116/-1). Proceeding to Code Generation planning for Unit 2.
+**Context**: CONSTRUCTION - Unit 2, Infrastructure Design complete; transitioning to Code Generation.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Code Generation Plan Issued
+**Timestamp**: 2026-07-26T06:05:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-2-shops-code-generation-plan.md` — 18 numbered steps, including Step 6's explicit cross-unit integration (modifying the existing `src/server/auth/service.ts` to re-export `isSeller` from the new Unit 2 module). Presented to user for plan approval before generation begins.
+**Context**: CONSTRUCTION - Unit 2, Code Generation Part 1 (Planning), Step 6 gate.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Code Generation Plan Approved
+**Timestamp**: 2026-07-26T06:10:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: Code generation plan approved. Beginning Part 2 Generation.
+**Context**: CONSTRUCTION - Unit 2, Code Generation Part 2 (Generation) starting.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Code Generation Complete
+**Timestamp**: 2026-07-26T06:45:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Executed all 18 steps: extended `db/schema.ts` with 4 new tables, business logic (`blocks.ts`, `versioning.ts`, `storage.ts` for R2 presigned uploads, `service.ts`), cross-unit integration modifying `src/server/auth/service.ts` to re-export `isSeller`, API layer (Server Actions for shop/rules management), repository layer, frontend components (shop profile, portfolio manager, tier/add-on/block editors, slot-state selector), README update, and `next.config.ts`/`.env.example` updates for R2. Ran full verification: `npm install`, `npx tsc --noEmit`, `npx eslint .`, `npx vitest run`, `npx next build`. Found and fixed 3 real issues: (1) a genuine bug where `src/server/db/client.ts` threw at import time without `DATABASE_URL`, which would have broken every test importing `auth/service.ts` now that it transitively imports Unit 2's DB-backed module — fixed with a placeholder-connection-string fallback; (2) a `publishRuleSet` logic bug where `maxQueue` was never actually persisted (called `setSlotStateRow` with the unchanged slot state instead of `setMaxQueueRow`) — caught before it shipped, not after; (3) missing explicit `| undefined` return-type annotations on several repository lookup functions, which TypeScript's default (non-strict-array-index) inference silently widened to non-optional, masking a real possible-empty-result case — added explicit types on `findShopByUserId`, `findShopById`, `getRuleVersionById`, `getRuleVersionByNumber`, `getShopCommissionSettings`. Final state: all checks clean, 69 tests pass (8 DB-integration tests correctly skip), production build succeeds (9 routes total).
+**Context**: CONSTRUCTION - Unit 2, Code Generation, Step 14, awaiting user approval.
+
+---

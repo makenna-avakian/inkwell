@@ -1,0 +1,21 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/server/auth/config";
+import { findShopByUserId } from "@/server/shops/repository";
+import ShopProfileForm from "@/app/components/shops/ShopProfileForm";
+
+export default async function NewShopPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/sign-in");
+
+  const existingShop = await findShopByUserId(session.user.id);
+  if (existingShop) redirect("/shop");
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-8 pt-32">
+      <h1 className="mb-6 text-3xl font-bold">Open your shop</h1>
+      <div className="w-full max-w-lg">
+        <ShopProfileForm mode="create" />
+      </div>
+    </main>
+  );
+}

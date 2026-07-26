@@ -43,7 +43,7 @@
 Build sequence: 1. Auth & Accounts → 2. Shops & Commission Rules → 3. Listings → 4. Browse & Discovery → 5. Commission Requests & Messaging → 6. Orders & Payments
 
 - [x] **Unit 1: Auth & Accounts** — COMPLETE (all Construction stages done, verified, committed to `main`)
-- [ ] Unit 2: Shops & Commission Rules — Functional Design ✅, NFR Requirements ✅, NFR Design ✅, Infrastructure Design ✅ (awaiting approval) → Code Generation
+- [ ] Unit 2: Shops & Commission Rules — Functional Design ✅, NFR Requirements ✅, NFR Design ✅, Infrastructure Design ✅, Code Generation ✅ (awaiting approval — verified: tsc/eslint/vitest/next build all pass) → Unit 3
 - [ ] Unit 3: Listings — NOT STARTED
 - [ ] Unit 4: Browse & Discovery — NOT STARTED
 - [ ] Unit 5: Commission Requests & Messaging — NOT STARTED

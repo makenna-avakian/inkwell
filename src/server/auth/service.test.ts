@@ -7,17 +7,26 @@ vi.mock("@/server/auth/repository", () => ({
   recordLoginAttempt: vi.fn(),
 }));
 
+// Unit 2 cross-unit re-export (Step 6, unit-2-shops-code-generation-plan.md) —
+// mocked here so this stays a unit test of Unit 1's own logic, not an
+// integration test pulling in Unit 2's real DB-backed implementation.
+vi.mock("@/server/shops/service", () => ({
+  isSeller: vi.fn(),
+}));
+
 import {
   createUser,
   findUserByEmail,
   getRecentLoginAttempts,
   recordLoginAttempt,
 } from "@/server/auth/repository";
+import { isSeller as shopsIsSeller } from "@/server/shops/service";
 import {
   EmailAlreadyRegisteredError,
   RateLimitedError,
   assertNotRateLimited,
   defaultDisplayName,
+  isSeller,
   recordLoginAttemptOutcome,
   signUp,
 } from "@/server/auth/service";
@@ -108,5 +117,13 @@ describe("recordLoginAttemptOutcome", () => {
       "unknown@example.com",
       false,
     );
+  });
+});
+
+describe("isSeller (cross-unit re-export, Unit 2 Step 6)", () => {
+  it("re-exports Unit 2's isSeller unchanged", async () => {
+    vi.mocked(shopsIsSeller).mockResolvedValue(true);
+    await expect(isSeller("user-1")).resolves.toBe(true);
+    expect(shopsIsSeller).toHaveBeenCalledWith("user-1");
   });
 });
