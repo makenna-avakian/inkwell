@@ -540,3 +540,83 @@
 **Context**: CONSTRUCTION - Unit 2, Code Generation, Step 14, awaiting user approval.
 
 ---
+
+## Unit 2 (Shops & Commission Rules) — Approved; Unit 2 COMPLETE
+**Timestamp**: 2026-07-26T06:50:00Z
+**User Input**: "please commit and continue to next stage."
+**AI Response**: Code generation approved. Committed to `main` (44 files, +2712/-14). Unit 2 is now fully complete across all Construction stages. Proceeding to Unit 3: Listings.
+**Context**: CONSTRUCTION - Unit 2 complete; transitioning to Unit 3.
+
+---
+
+## Unit 3 (Listings) — Functional Design Plan Issued
+**Timestamp**: 2026-07-26T06:55:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-3-listings-functional-design-plan.md` with 3 questions: listing removal (soft status vs. hard delete), multiple images per listing (reuse Unit 2's PortfolioImage pattern vs. single image), price validation (positive vs. non-negative). Noted this unit reuses Unit 2's R2 upload pattern directly. Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 3, Functional Design, Step 4 gate.
+
+---
+
+## Unit 3 (Listings) — Functional Design Answers Received
+**Timestamp**: 2026-07-26T07:00:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (soft `status: 'removed'`), Q2=A (multiple images via ListingImage table, mirroring Unit 2's PortfolioImage), Q3=B (price non-negative, zero allowed). No ambiguities. Proceeding to generate artifacts.
+**Context**: CONSTRUCTION - Unit 3, Functional Design, Step 6 (artifact generation).
+
+---
+
+## Unit 3 (Listings) — Functional Design Complete
+**Timestamp**: 2026-07-26T07:10:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `domain-entities.md` (Listing, ListingImage), `business-logic-model.md` (reuses Unit 2's assertOwner + image-upload infrastructure directly), `business-rules.md` (BR-1..BR-5 + PBT-01), `frontend-components.md` (seller-facing only, reuses PortfolioManager's upload UX pattern).
+**Context**: CONSTRUCTION - Unit 3, Functional Design, Step 7, awaiting user approval.
+
+---
+
+## Unit 3 (Listings) — Functional Design Approved; NFR Requirements Complete (no new questions)
+**Timestamp**: 2026-07-26T07:15:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Functional Design approved. Assessed NFR Requirements: every category (scalability, performance, security, tech stack) is already covered by Unit 2's decisions (same R2 storage, same next/image delivery, same Postgres/Drizzle, no new external dependency) — nothing unit-specific to decide. Generated `nfr-requirements.md` documenting inheritance explicitly rather than issuing a question round with no real content, consistent with depth-levels.md's adaptive-depth principle (concise treatment for a simple unit, not artificially inflated).
+**Context**: CONSTRUCTION - Unit 3, NFR Requirements complete (no gate needed); proceeding to NFR Design.
+
+---
+
+## Unit 3 (Listings) — NFR Design & Infrastructure Design Complete (no new questions)
+**Timestamp**: 2026-07-26T07:20:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `nfr-design-patterns.md`/`logical-components.md` (full reuse of Unit 2's R2/timeout/retry patterns, no new components) and `infrastructure-design.md`/`deployment-architecture.md` (same bucket, new object key path only). No project-wide or unit-specific questions remained unresolved. Updated `aidlc-state.md`. Presenting all three stages together for a single approval, given the genuinely empty question set at each.
+**Context**: CONSTRUCTION - Unit 3, NFR Requirements/NFR Design/Infrastructure Design complete, awaiting user approval to proceed to Code Generation.
+
+---
+
+## Unit 3 (Listings) — NFR/Infra Design Approved
+**Timestamp**: 2026-07-26T07:25:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Approved. Proceeding to Code Generation planning for Unit 3.
+**Context**: CONSTRUCTION - Unit 3, design stages complete; transitioning to Code Generation.
+
+---
+
+## Unit 3 (Listings) — Code Generation Plan Issued
+**Timestamp**: 2026-07-26T07:30:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-3-listings-code-generation-plan.md` — 16 steps (shorter than Units 1/2 since no new dependencies/infra). Presented for plan approval before generation begins.
+**Context**: CONSTRUCTION - Unit 3, Code Generation Part 1 (Planning), gate.
+
+---
+
+## Unit 3 (Listings) — Code Generation Plan Approved
+**Timestamp**: 2026-07-26T07:35:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: Plan approved. Beginning Part 2 Generation.
+**Context**: CONSTRUCTION - Unit 3, Code Generation Part 2 (Generation) starting.
+
+---
+
+## Unit 3 (Listings) — Code Generation Complete
+**Timestamp**: 2026-07-26T07:50:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Executed all 16 steps: extended `db/schema.ts` with `listings`/`listing_images`, business logic reusing Unit 2's `storage.ts` directly (`src/server/listings/repository.ts`, `service.ts`), API layer (Server Actions), frontend components (ListingManager, ListingEditForm + pages), README update. No new dependencies or infrastructure needed. Ran full verification: `tsc --noEmit` (clean first pass — no bugs found this time, unlike Units 1/2), `eslint` (clean), `vitest run` (83 passed, 11 skipped), `next build` (succeeds, 11 routes total). Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 3, Code Generation, awaiting user approval.
+
+---

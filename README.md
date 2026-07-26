@@ -46,4 +46,4 @@ Integration tests against a real database (`src/server/auth/repository.test.ts` 
 
 ## Current Status
 
-Phase 1 (MVP) is in progress. Units 1-2 (Auth & Accounts; Shops & Commission Rules) are implemented; Units 3-6 (Listings, Browse & Discovery, Commission Requests & Messaging, Orders & Payments) are not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.
+Phase 1 (MVP) is in progress. Units 1-3 (Auth & Accounts; Shops & Commission Rules; Listings) are implemented; Units 4-6 (Browse & Discovery, Commission Requests & Messaging, Orders & Payments) are not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.

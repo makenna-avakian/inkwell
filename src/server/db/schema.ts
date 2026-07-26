@@ -134,3 +134,35 @@ export type PortfolioImage = typeof portfolioImages.$inferSelect;
 export type CommissionRuleVersion = typeof commissionRuleVersions.$inferSelect;
 export type NewCommissionRuleVersion = typeof commissionRuleVersions.$inferInsert;
 export type ShopCommissionSettings = typeof shopCommissionSettings.$inferSelect;
+
+// --- Unit 3: Listings ---
+// See aidlc-docs/construction/unit-3-listings/functional-design/domain-entities.md
+
+export const listings = pgTable("listings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  shopId: uuid("shop_id")
+    .notNull()
+    .references(() => shopProfiles.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  priceCents: integer("price_cents").notNull(),
+  status: text("status", { enum: ["available", "sold", "removed"] })
+    .notNull()
+    .default("available"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const listingImages = pgTable("listing_images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  listingId: uuid("listing_id")
+    .notNull()
+    .references(() => listings.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),
+  position: integer("position").notNull(),
+});
+
+export type Listing = typeof listings.$inferSelect;
+export type NewListing = typeof listings.$inferInsert;
+export type ListingImage = typeof listingImages.$inferSelect;
