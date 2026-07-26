@@ -476,3 +476,35 @@
 **Context**: CONSTRUCTION - Unit 2, NFR Design, Step 7, awaiting user approval.
 
 ---
+
+## Unit 2 (Shops & Commission Rules) — NFR Design Approved
+**Timestamp**: 2026-07-26T05:40:00Z
+**User Input**: "commit and Continue to Next Stage"
+**AI Response**: NFR Design approved. Committed to `main` (5 files, +87/-1). Proceeding to Infrastructure Design for Unit 2.
+**Context**: CONSTRUCTION - Unit 2, NFR Design complete; transitioning to Infrastructure Design.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Infrastructure Design Plan Issued
+**Timestamp**: 2026-07-26T05:45:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-2-shops-infrastructure-design-plan.md` with 2 questions: R2 bucket strategy across environments (one bucket per env vs. shared bucket with prefixed keys), and public read access approach for images (public bucket URL vs. signed GET URLs). Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 2, Infrastructure Design, Step 4 gate.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Infrastructure Design Answers Received
+**Timestamp**: 2026-07-26T05:50:00Z
+**User Input**: "done"
+**AI Response**: Q1=B (one shared R2 bucket, environment-prefixed object keys), Q2=A (public bucket URL / custom domain, no per-request signed reads). No ambiguities. Proceeding to generate Infrastructure Design artifacts.
+**Context**: CONSTRUCTION - Unit 2, Infrastructure Design, Step 6 (artifact generation).
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Infrastructure Design Complete
+**Timestamp**: 2026-07-26T05:55:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Updated `shared-infrastructure.md` (R2 bucket/domain decisions). Generated `infrastructure-design.md` (CORS requirement for direct browser uploads, object key structure, custom-domain public reads) and `deployment-architecture.md` (upload sequence diagram, environment key-prefix mapping, rollback path). Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 2, Infrastructure Design, Step 7, awaiting user approval.
+
+---

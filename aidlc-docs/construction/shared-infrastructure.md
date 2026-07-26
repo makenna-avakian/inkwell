@@ -11,6 +11,8 @@ Project-wide infrastructure decisions, made during Unit 1's Infrastructure Desig
 | Observability | **Vercel built-in (logs, analytics) + Sentry** (error tracking/alerting) | Question 4: A. Satisfies RESILIENCY-05/06/07's metrics/logs/dashboard requirement without a separate APM platform, appropriate for Phase 1 scale. |
 | CI/CD | GitHub Actions + Vercel preview/production deploys | Decided at Unit 1 NFR Design (RESILIENCY-04). |
 | DR strategy | Backup & Restore, single-region multi-zone | Decided at Requirements Analysis (RESILIENCY-02/08). Neon's automated point-in-time restore satisfies the backup half of this. |
+| Object storage | Cloudflare R2 (decided at Unit 2 NFR Requirements) — **one shared bucket** (`inkwell-media`) with environment-prefixed keys (`dev/...`, `staging/...`, `prod/...`), not one bucket per environment | Simpler to manage than 3 buckets; isolation is via key prefix instead. |
+| Image public access | R2 public bucket access via a custom domain (e.g., `media.inkwell.app`) mapped to the bucket | `next/image`'s `remotePatterns` allowlists this domain; only uploads are authenticated (presigned PUT) — reads are public since the content (shop/portfolio images) is public marketplace data. |
 
 ## Encryption (SECURITY-01)
 - Neon Postgres: encryption at rest (managed by Neon) and enforces TLS for all connections (`sslmode=require` in the connection string).
