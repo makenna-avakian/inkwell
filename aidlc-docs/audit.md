@@ -380,3 +380,35 @@
 **Context**: CONSTRUCTION - Unit 1, Code Generation, Step 14, awaiting user approval.
 
 ---
+
+## Unit 1 (Auth & Accounts) — Code Generation Approved; Unit 1 COMPLETE
+**Timestamp**: 2026-07-26T04:35:00Z
+**User Input**: "thanks, lets commit this" (approval implied by proceeding to commit) followed by explicit "Continue to Next Stage"
+**AI Response**: Code generation approved. Committed all Unit 1 work to `main` (132 files, +21560/-4402) per explicit user request — not pushed. Unit 1 (Auth & Accounts) is now fully complete across all Construction stages. Proceeding to Unit 2: Shops & Commission Rules, starting with Functional Design.
+**Context**: CONSTRUCTION - Unit 1 complete; transitioning to Unit 2 (per-unit loop, per unit-of-work.md's approved build sequence).
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Functional Design Plan Issued
+**Timestamp**: 2026-07-26T04:40:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-2-shops-functional-design-plan.md` with 4 questions: commission-rules content format (Markdown/HTML/JSON-blocks), rule-set versioning storage structure, tier/add-on validation minimums, portfolio image limit. Noted this unit will implement `isSeller(userId)`, resolving Unit 1's forward reference by modifying the existing `src/server/auth/service.ts`. Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 2, Functional Design, Step 4 gate.
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Functional Design Answers Received
+**Timestamp**: 2026-07-26T04:45:00Z
+**User Input**: "done"
+**AI Response**: Q1=C (structured JSON blocks, matching the proposal's literal description), Q2=A (append-only versioning), Q3=A (validation minimums: ≥1 tier, positive prices, positive maxQueue), Q4=A (no hard portfolio image limit). No ambiguities. While designing the domain model, identified that Q2's "append-only, immutable" requirement is in tension with slot state (open/closed/waitlist) and maxQueue needing frequent, lightweight updates — resolved by splitting into two tables: `commissionRuleVersions` (immutable content history) and `shopCommissionSettings` (mutable operational state pointing at the current version). Documented as a Functional Design refinement within the existing CommissionRuleSet component boundary, not a scope change. Proceeding to generate artifacts.
+**Context**: CONSTRUCTION - Unit 2, Functional Design, Step 6 (artifact generation).
+
+---
+
+## Unit 2 (Shops & Commission Rules) — Functional Design Complete
+**Timestamp**: 2026-07-26T04:55:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `domain-entities.md` (ShopProfile, PortfolioImage, CommissionRuleVersion, ShopCommissionSettings, block schema), `business-logic-model.md` (isSeller, create/edit shop, publish rules, slot state, read paths), `business-rules.md` (BR-1..BR-8 + PBT-01 table), `frontend-components.md` (seller-facing management UI only — public shop page is Unit 4's responsibility). Compiled compliance tables for the stage completion message.
+**Context**: CONSTRUCTION - Unit 2, Functional Design, Step 7, awaiting user approval.
+
+---

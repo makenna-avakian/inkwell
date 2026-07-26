@@ -42,8 +42,8 @@
 ### 🟢 CONSTRUCTION PHASE (per unit, in approved sequence — one implementer/session, sequential)
 Build sequence: 1. Auth & Accounts → 2. Shops & Commission Rules → 3. Listings → 4. Browse & Discovery → 5. Commission Requests & Messaging → 6. Orders & Payments
 
-- [ ] **Unit 1: Auth & Accounts** — Functional Design ✅, NFR Requirements ✅, NFR Design ✅, Infrastructure Design ✅, Code Generation ✅ (awaiting approval — verified: tsc/eslint/vitest/next build all pass) → Unit 2
-- [ ] Unit 2: Shops & Commission Rules — NOT STARTED
+- [x] **Unit 1: Auth & Accounts** — COMPLETE (all Construction stages done, verified, committed to `main`)
+- [ ] Unit 2: Shops & Commission Rules — IN PROGRESS (Functional Design starting)
 - [ ] Unit 3: Listings — NOT STARTED
 - [ ] Unit 4: Browse & Discovery — NOT STARTED
 - [ ] Unit 5: Commission Requests & Messaging — NOT STARTED
