@@ -708,3 +708,75 @@
 **Context**: CONSTRUCTION - Unit 4, Code Generation, awaiting user approval.
 
 ---
+
+## Unit 4 (Browse & Discovery) — Approved; Unit 4 COMPLETE
+**Timestamp**: 2026-07-26T09:05:00Z
+**User Input**: "commit, then continue"
+**AI Response**: Approved. Committed to `main` (49 files, +1597/-10). Unit 4 is now fully complete. Proceeding to Unit 5: Commission Requests & Messaging.
+**Context**: CONSTRUCTION - Unit 4 complete; transitioning to Unit 5.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Functional Design Plan Issued
+**Timestamp**: 2026-07-26T09:10:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-5-requests-functional-design-plan.md`. Flagged a forward dependency (accepting a request should create an Order and authorize escrow via Unit 6's CommissionLifecycleService, which doesn't exist yet — this unit will only transition status, same resolution pattern as Unit 1→2's isSeller). Asked 4 questions: waitlist dedup, active-request definition for queue-limit counting (since Order-based capacity tracking doesn't exist yet), StatusBadge granularity, and whether a decline reason is required. Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 5, Functional Design, Step 4 gate.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Functional Design Answers Received
+**Timestamp**: 2026-07-26T09:15:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (waitlist join is idempotent), Q2=A (only 'Requested' status counts against maxQueue for now — accepted requests stop counting against Unit 5's own check, which is an intentional interim limitation until Unit 6 adds proper capacity logic around Order completion), Q3=A (simple per-thread boolean unread flag), Q4=A (decline reason required, non-empty). No ambiguities. Proceeding to generate artifacts.
+**Context**: CONSTRUCTION - Unit 5, Functional Design, Step 6 (artifact generation).
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Functional Design Complete
+**Timestamp**: 2026-07-26T09:25:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `domain-entities.md` (CommissionRequest with pinned ruleVersionId, WaitlistEntry, Message referencing CommissionRequest only — designed so Unit 6 can find messages via its own requestId reference without Message needing to know about Order, RequestReadReceipt), `business-logic-model.md` (submitRequest/joinWaitlist/acceptRequest/declineRequest/postMessage/enforceQueueLimit, with the accept→Order forward-dependency documented), `business-rules.md` (BR-1..BR-7 + PBT-01), `frontend-components.md` (both buyer- and seller-facing UI plus a shared MessageThread — the first unit needing both).
+**Context**: CONSTRUCTION - Unit 5, Functional Design, Step 7, awaiting user approval.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Functional Design Approved; NFR Requirements Plan Issued
+**Timestamp**: 2026-07-26T09:30:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Functional Design approved. Created `unit-5-requests-nfr-requirements-plan.md` with 1 question: message thread real-time behavior (refresh-based vs. polling vs. WebSockets/SSE, the latter requiring new infrastructure Vercel serverless can't provide natively). Presented to user; awaiting answer.
+**Context**: CONSTRUCTION - Unit 5, NFR Requirements, Step 4 gate.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — NFR Requirements Answer Received
+**Timestamp**: 2026-07-26T09:35:00Z
+**User Input**: "done"
+**AI Response**: Q1=B (polling — client re-fetches the thread every N seconds while the page is open, no new infrastructure). Proceeding to generate NFR Requirements artifacts.
+**Context**: CONSTRUCTION - Unit 5, NFR Requirements, Step 6 (artifact generation).
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — NFR Requirements, NFR Design & Infrastructure Design Complete
+**Timestamp**: 2026-07-26T09:40:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated NFR Requirements (client-side polling, no new infra), NFR Design (fail-safe defaults for invalid submissions, polling is purely client-side), and Infrastructure Design (new tables + R2 key path, no new environment variables). No further questions needed at NFR Design/Infrastructure Design. Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 5, design stages complete, awaiting user approval to proceed to Code Generation.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Design Stages Approved
+**Timestamp**: 2026-07-26T09:45:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Approved. Proceeding to Code Generation planning for Unit 5.
+**Context**: CONSTRUCTION - Unit 5 design stages complete; transitioning to Code Generation.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Code Generation Plan Issued
+**Timestamp**: 2026-07-26T09:50:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-5-requests-code-generation-plan.md` — 17 steps, including Step 6's cross-unit modification of Unit 4's `PublicShopPage.tsx` to embed the request form/waitlist button. Presented to user for plan approval before generation begins.
+**Context**: CONSTRUCTION - Unit 5, Code Generation Part 1 (Planning), gate.
+
+---
