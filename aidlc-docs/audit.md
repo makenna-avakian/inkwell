@@ -780,3 +780,19 @@
 **Context**: CONSTRUCTION - Unit 5, Code Generation Part 1 (Planning), gate.
 
 ---
+
+## Unit 5 (Commission Requests & Messaging) — Code Generation Plan Approved
+**Timestamp**: 2026-07-26T09:55:00Z
+**User Input**: "commit approve and continue"
+**AI Response**: Committed the design-stage docs to `main` (15 files, +452/-2). Code generation plan approved. Beginning Part 2 Generation.
+**Context**: CONSTRUCTION - Unit 5, Code Generation Part 2 (Generation) starting.
+
+---
+
+## Unit 5 (Commission Requests & Messaging) — Code Generation Complete
+**Timestamp**: 2026-07-26T10:15:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Executed all 17 steps: extended `db/schema.ts` with 4 tables (commission_requests, waitlist_entries, messages, request_read_receipts; DB-level unique/composite-PK constraints enforce BR-3's idempotency and the read-receipt model), business logic (`logic.ts` pure predicates, `repository.ts` with onConflict-based idempotency, `service.ts`), Server Actions including `getMessagesAction` for polling, the full request/messaging UI for both personas, and Step 6's cross-unit wiring of `PublicShopPage.tsx` to embed the request form/waitlist button based on slot state. Ran full verification: `tsc --noEmit` (clean), `eslint` (found and fixed one unused-import warning), `vitest run` (125 passed, 16 skipped — including fixing a React `act()` warning in the polling test), `next build` (succeeds, 16 routes). Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 5, Code Generation, awaiting user approval.
+
+---

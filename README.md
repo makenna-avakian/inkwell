@@ -46,4 +46,4 @@ Integration tests against a real database (`src/server/auth/repository.test.ts` 
 
 ## Current Status
 
-Phase 1 (MVP) is in progress. Units 1-4 (Auth & Accounts; Shops & Commission Rules; Listings; Browse & Discovery) are implemented, including the first public-facing pages (`/gallery`, `/search`, `/shops/[shopId]`); Units 5-6 (Commission Requests & Messaging, Orders & Payments) are not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.
+Phase 1 (MVP) is in progress. Units 1-5 (Auth & Accounts; Shops & Commission Rules; Listings; Browse & Discovery; Commission Requests & Messaging) are implemented — buyers can now submit commission requests and message sellers directly from a shop page; Unit 6 (Orders & Payments) is not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.

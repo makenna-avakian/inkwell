@@ -3,8 +3,10 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -169,3 +171,88 @@ export const listingImages = pgTable("listing_images", {
 export type Listing = typeof listings.$inferSelect;
 export type NewListing = typeof listings.$inferInsert;
 export type ListingImage = typeof listingImages.$inferSelect;
+
+// --- Unit 5: Commission Requests & Messaging ---
+// See aidlc-docs/construction/unit-5-requests/functional-design/domain-entities.md
+
+export const commissionRequests = pgTable("commission_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  shopId: uuid("shop_id")
+    .notNull()
+    .references(() => shopProfiles.id, { onDelete: "cascade" }),
+  buyerId: uuid("buyer_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  ruleVersionId: uuid("rule_version_id")
+    .notNull()
+    .references(() => commissionRuleVersions.id),
+  tierId: text("tier_id").notNull(),
+  addOnIds: jsonb("add_on_ids").notNull().default([]),
+  description: text("description").notNull(),
+  referenceImageUrls: jsonb("reference_image_urls").notNull().default([]),
+  budgetCents: integer("budget_cents"),
+  deadlinePreference: text("deadline_preference"),
+  status: text("status", { enum: ["requested", "accepted", "declined"] })
+    .notNull()
+    .default("requested"),
+  declineReason: text("decline_reason"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  respondedAt: timestamp("responded_at", { withTimezone: true }),
+});
+
+export const waitlistEntries = pgTable(
+  "waitlist_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    shopId: uuid("shop_id")
+      .notNull()
+      .references(() => shopProfiles.id, { onDelete: "cascade" }),
+    buyerId: uuid("buyer_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [unique().on(table.shopId, table.buyerId)], // BR-3: idempotent join
+);
+
+export const messages = pgTable("messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestId: uuid("request_id")
+    .notNull()
+    .references(() => commissionRequests.id, { onDelete: "cascade" }),
+  senderId: uuid("sender_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  attachmentUrls: jsonb("attachment_urls").notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const requestReadReceipts = pgTable(
+  "request_read_receipts",
+  {
+    requestId: uuid("request_id")
+      .notNull()
+      .references(() => commissionRequests.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    lastReadAt: timestamp("last_read_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.requestId, table.userId] })],
+);
+
+export type CommissionRequest = typeof commissionRequests.$inferSelect;
+export type NewCommissionRequest = typeof commissionRequests.$inferInsert;
+export type WaitlistEntry = typeof waitlistEntries.$inferSelect;
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
+export type RequestReadReceipt = typeof requestReadReceipts.$inferSelect;

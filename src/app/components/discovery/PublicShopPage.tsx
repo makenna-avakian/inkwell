@@ -1,16 +1,20 @@
+import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getShopPageData } from "@/server/discovery/service";
+import { auth } from "@/server/auth/config";
 import BlockRenderer from "./BlockRenderer";
 import ListingCard from "./ListingCard";
 import type { ContentBlock } from "@/server/shops/blocks";
+import CommissionRequestForm from "@/app/components/requests/CommissionRequestForm";
+import WaitlistJoinButton from "@/app/components/requests/WaitlistJoinButton";
 
 interface PublicShopPageProps {
   shopId: string;
 }
 
 export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
-  const data = await getShopPageData(shopId);
+  const [data, session] = await Promise.all([getShopPageData(shopId), auth()]);
   if (!data) notFound();
 
   const { shop, portfolio, publishedRules, availableListings } = data;
@@ -45,6 +49,38 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
         <BlockRenderer blocks={publishedRules.version.rulesContent as ContentBlock[]} />
       ) : (
         <p data-testid="public-shop-page-no-rules">This shop hasn&apos;t published commission rules yet.</p>
+      )}
+
+      <h2 className="mt-10 mb-4 text-xl font-semibold">Request a Commission</h2>
+      {publishedRules && publishedRules.slotState === "open" && (
+        session?.user ? (
+          <CommissionRequestForm
+            shopId={shop.id}
+            tiers={publishedRules.version.tiers as { id: string; name: string; priceCents: number }[]}
+          />
+        ) : (
+          <p>
+            <Link href="/sign-in" className="underline">
+              Sign in
+            </Link>{" "}
+            to request a commission.
+          </p>
+        )
+      )}
+      {publishedRules && publishedRules.slotState === "waitlist" && (
+        session?.user ? (
+          <WaitlistJoinButton shopId={shop.id} />
+        ) : (
+          <p>
+            <Link href="/sign-in" className="underline">
+              Sign in
+            </Link>{" "}
+            to join the waitlist.
+          </p>
+        )
+      )}
+      {publishedRules && publishedRules.slotState === "closed" && (
+        <p data-testid="public-shop-page-closed">This shop isn&apos;t accepting commissions right now.</p>
       )}
 
       <h2 className="mt-10 mb-4 text-xl font-semibold">Available Now</h2>
