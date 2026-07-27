@@ -5,7 +5,7 @@
 ## Project Information
 - **Project Type**: Brownfield (`shareart-frontend`, being replaced); `shareart-backend` retired
 - **Start Date**: 2026-07-26T00:00:00Z
-- **Current Stage**: INCEPTION complete — ready for CONSTRUCTION, Unit 1 (Auth & Accounts)
+- **Current Stage**: CONSTRUCTION and Build and Test complete — ready for Operations (placeholder phase)
 
 ## Workspace State
 - **shareart-frontend**: Existing code (Yes) — a small Next.js 15 personal portfolio site ("Makenna Avakian Art"), no backend/API/DB wired up yet. See `inception/reverse-engineering/`.
@@ -47,8 +47,11 @@ Build sequence: 1. Auth & Accounts → 2. Shops & Commission Rules → 3. Listin
 - [x] **Unit 3: Listings** — COMPLETE (all Construction stages done, verified, committed to `main`)
 - [x] **Unit 4: Browse & Discovery** — COMPLETE (all Construction stages done, verified, committed to `main`)
 - [x] **Unit 5: Commission Requests & Messaging** — COMPLETE (all Construction stages done, verified, committed to `main`)
-- [ ] Unit 6: Orders & Payments — Functional Design ✅, NFR Requirements ✅, NFR Design ✅, Infrastructure Design ✅ (awaiting approval) → Code Generation — FINAL UNIT of Phase 1
-- [ ] Build and Test (all units) — NOT STARTED
+- [x] **Unit 6: Orders & Payments** — COMPLETE (all Construction stages done, verified, committed to `main` as `22f1ab2`) — FINAL UNIT of Phase 1
+
+**CONSTRUCTION PHASE (Per-Unit Loop) COMPLETE — all 6 units built, verified, and committed.**
+
+- [x] Build and Test (all units) — COMPLETE, see `construction/build-and-test/build-and-test-summary.md`
 
 ## Key Decisions Log
 - Single Next.js codebase in `shareart-frontend`; `shareart-backend` retired (no code generated there going forward).

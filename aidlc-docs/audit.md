@@ -906,3 +906,36 @@ Final verification: `tsc --noEmit` clean, `eslint .` clean, `vitest run` — 168
 **Context**: CONSTRUCTION - Unit 6, Code Generation Part 2 (Generation) complete. This is the final unit of Phase 1 Construction.
 
 ---
+
+## Unit 6 (Orders & Payments) — Code Generation Approved & Committed
+**Timestamp**: 2026-07-26T12:20:00Z
+**User Input**: "awesome, let" (truncated — clarified before acting), then "slets commit and continue"
+**AI Response**: Treated as approval of Unit 6's Code Generation completion message + instruction to commit and proceed. Staged and committed all Unit 6 files (56 files, 2810 insertions) as commit `22f1ab2` — "Unit 6 (Orders & Payments): full Construction pass". This is the final unit of Phase 1; all 6 units are now built.
+**Context**: CONSTRUCTION - Unit 6 Code Generation approved and committed. Phase 1 Construction (Per-Unit Loop) complete. Proceeding to Build and Test.
+
+---
+
+## Build and Test Stage
+**Timestamp**: 2026-07-26T12:35:00Z
+**Build Status**: Success
+**Test Status**: Pass (168 passed / 20 skipped, 0 failed — full suite re-run against the complete 6-unit codebase; `next build --turbopack` compiled all 21 routes)
+**Files Generated**:
+- build-instructions.md
+- unit-test-instructions.md
+- integration-test-instructions.md
+- performance-test-instructions.md
+- security-test-instructions.md
+- build-and-test-summary.md
+
+Flagged two pre-launch follow-ups (not addressed this session, out of Phase 1 MVP scope per the project's existing "no automated chaos/load tooling for Phase 1" and "manual on-call-is-the-implementer" resiliency decisions): (1) `npm audit` shows 48 pre-existing transitive-dependency advisories, unaddressed; (2) the full cross-unit manual smoke walkthrough (real Stripe test-mode + R2 credentials) wasn't run in this session's environment — documented as a checklist for the next environment where those credentials are available.
+**Context**: CONSTRUCTION PHASE and Build and Test stage complete. This is the end of the AI-DLC workflow's currently-implemented scope for this project — OPERATIONS remains a placeholder phase per core-workflow.md.
+
+---
+
+## Build and Test Stage — Approved
+**Timestamp**: 2026-07-26T12:40:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: Approved. Committing Build and Test artifacts, then proceeding to OPERATIONS — currently a placeholder phase per core-workflow.md, so this concludes the AI-DLC workflow's actionable scope for Inkwell's Phase 1 MVP.
+**Context**: Build and Test approved. All INCEPTION and CONSTRUCTION phase work for Phase 1 (all 6 units) is complete and committed.
+
+---
