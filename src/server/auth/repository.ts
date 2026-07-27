@@ -6,6 +6,7 @@ import {
   sessions,
   users,
   type NewUser,
+  type Session,
   type User,
 } from "@/server/db/schema";
 import { randomUUID } from "crypto";
@@ -60,6 +61,14 @@ export async function linkOAuthAccount(
   return account;
 }
 
+export async function updateUserRow(
+  id: string,
+  patch: Partial<Pick<NewUser, "displayName">>,
+): Promise<User | undefined> {
+  const [user] = await db.update(users).set(patch).where(eq(users.id, id)).returning();
+  return user;
+}
+
 export async function createSession(userId: string) {
   const [session] = await db
     .insert(sessions)
@@ -80,6 +89,18 @@ export async function findSessionByToken(sessionToken: string) {
     .where(eq(sessions.sessionToken, sessionToken))
     .limit(1);
   return row;
+}
+
+export async function updateSessionExpiry(
+  sessionToken: string,
+  expiresAt: Date,
+): Promise<Session | undefined> {
+  const [session] = await db
+    .update(sessions)
+    .set({ expiresAt })
+    .where(eq(sessions.sessionToken, sessionToken))
+    .returning();
+  return session;
 }
 
 export async function deleteSessionByToken(sessionToken: string): Promise<void> {

@@ -8,6 +8,8 @@ import {
   findUserByEmail,
   findUserById,
   linkOAuthAccount,
+  updateSessionExpiry,
+  updateUserRow,
 } from "@/server/auth/repository";
 import { defaultDisplayName } from "@/server/auth/service";
 import type { User } from "@/server/db/schema";
@@ -106,8 +108,33 @@ export function buildAdapter(): Adapter {
       await deleteSessionByToken(sessionToken);
     },
 
-    // updateSession/updateUser/unlinkAccount are unused by Phase 1's flows
-    // (no session rolling-renewal, no profile-editing-via-OAuth-refresh, no
-    // account unlinking UI) — intentionally omitted rather than stubbed.
+    // Required by Auth.js's database-session strategy even though no Phase 1
+    // flow calls these directly: getSessionAndUser triggers an updateSession
+    // call on every request past sessionMaxAge/updateAge (rolling renewal),
+    // and assertConfig() throws MissingAdapterMethods at startup if either is
+    // absent regardless of whether our own code ever invokes them.
+    async updateUser(data) {
+      if (!data.id) throw new Error("updateUser requires an id");
+      const user = data.name
+        ? await updateUserRow(data.id, { displayName: data.name })
+        : await findUserById(data.id);
+      if (!user) throw new Error("User not found");
+      return toAdapterUser(user);
+    },
+
+    async updateSession({ sessionToken, expires }) {
+      if (!expires) return null;
+      const session = await updateSessionExpiry(sessionToken, expires);
+      if (!session) return null;
+      return {
+        sessionToken: session.sessionToken,
+        userId: session.userId,
+        expires: session.expiresAt,
+      };
+    },
+
+    // unlinkAccount is unused by Phase 1's flows (no account-unlinking UI) —
+    // intentionally omitted rather than stubbed; Auth.js only requires it
+    // when an adapter supports account unlinking to begin with.
   };
 }

@@ -939,3 +939,13 @@ Flagged two pre-launch follow-ups (not addressed this session, out of Phase 1 MV
 **Context**: Build and Test approved. All INCEPTION and CONSTRUCTION phase work for Phase 1 (all 6 units) is complete and committed.
 
 ---
+
+## Post-Construction Bug Fix — Auth Adapter Missing Required Methods
+**Timestamp**: 2026-07-26T13:05:00Z
+**User Input**: "how do i get postgres set up?" → walked through Neon setup → user ran `npm run db:generate` locally and hit `DATABASE_URL must be set` (drizzle-kit only auto-loads `.env`, not Next.js's `.env.local` convention that the README told them to use) → renamed to `.env`, migrations applied successfully → started the real dev server for the first time this session and found a genuine runtime bug.
+**AI Response**: `src/server/auth/adapter.ts`'s hand-rolled Auth.js Adapter (built in Unit 1) intentionally omitted `updateUser`/`updateSession`, reasoning that no Phase 1 flow calls them directly. That reasoning was wrong: Auth.js's `assertConfig()` requires both methods to exist on any adapter used with the `"database"` session strategy, regardless of whether the app's own code invokes them — and `updateSession` is in fact called internally by Auth.js for session-rolling renewal on every request past `updateAge`. This was never caught by the test suite because every test mocks `auth()`/the adapter's dependents rather than exercising the real Auth.js config, and this was the first time the dev server was actually run end-to-end in this session.
+
+Fixed by adding `updateUserRow`/`updateSessionExpiry` to `src/server/auth/repository.ts` and implementing `updateUser`/`updateSession` on the adapter (real, minimal implementations — not stubs), plus a new `adapter.test.ts` (5 tests, mocked repository). Verified live: restarted the dev server, signed up a real test account through the browser, confirmed no `MissingAdapterMethods` error and that the navbar correctly reflected an authenticated session. Full suite re-run: 173 passed / 20 skipped (up from 168 — the 5 new adapter tests), `tsc`/`eslint` clean.
+**Context**: Ad hoc post-Build-and-Test fix, found during the user's first local run of the actual dev server. Not yet committed — pending user confirmation.
+
+---
