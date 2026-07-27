@@ -13,7 +13,7 @@ export default function OAuthButton({ provider }: OAuthButtonProps) {
       <button
         type="submit"
         data-testid={`oauth-${provider}-button`}
-        className="w-full rounded-lg border border-gray-300 py-3 font-medium transition hover:bg-gray-50"
+        className="w-full border border-border py-3 text-xs font-medium tracking-[0.12em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent"
       >
         {label}
       </button>

@@ -40,17 +40,32 @@ export default function BlockEditor({ blocks, onChange }: BlockEditorProps) {
   return (
     <div data-testid="block-editor">
       {blocks.map((block, index) => (
-        <div key={index} className="mb-3 rounded border border-gray-300 p-3" data-testid={`block-editor-row-${index}`}>
-          <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
+        <div key={index} className="mb-3 border border-border bg-surface p-3" data-testid={`block-editor-row-${index}`}>
+          <div className="mb-2 flex items-center justify-between text-xs tracking-[0.1em] text-muted uppercase">
             <span>{block.type}</span>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => moveBlock(index, -1)} data-testid="block-editor-move-up-button">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => moveBlock(index, -1)}
+                data-testid="block-editor-move-up-button"
+                className="text-foreground transition-colors hover:text-accent"
+              >
                 ↑
               </button>
-              <button type="button" onClick={() => moveBlock(index, 1)} data-testid="block-editor-move-down-button">
+              <button
+                type="button"
+                onClick={() => moveBlock(index, 1)}
+                data-testid="block-editor-move-down-button"
+                className="text-foreground transition-colors hover:text-accent"
+              >
                 ↓
               </button>
-              <button type="button" onClick={() => removeBlock(index)} data-testid="block-editor-remove-button">
+              <button
+                type="button"
+                onClick={() => removeBlock(index)}
+                data-testid="block-editor-remove-button"
+                className="text-foreground transition-colors hover:text-accent"
+              >
                 Remove
               </button>
             </div>
@@ -61,7 +76,7 @@ export default function BlockEditor({ blocks, onChange }: BlockEditorProps) {
               value={block.text}
               onChange={(e) => updateBlock(index, { ...block, text: e.target.value })}
               data-testid="block-editor-text-input"
-              className="w-full rounded border border-gray-300 p-2"
+              className="w-full border border-border bg-background p-2 text-foreground focus:border-accent focus:outline-none"
             />
           )}
 
@@ -72,7 +87,7 @@ export default function BlockEditor({ blocks, onChange }: BlockEditorProps) {
                 updateBlock(index, { ...block, items: e.target.value.split("\n") })
               }
               data-testid="block-editor-bullet-list-input"
-              className="w-full rounded border border-gray-300 p-2"
+              className="w-full border border-border bg-background p-2 text-foreground focus:border-accent focus:outline-none"
               placeholder="One item per line"
             />
           )}
@@ -83,23 +98,43 @@ export default function BlockEditor({ blocks, onChange }: BlockEditorProps) {
               onChange={(e) => updateBlock(index, { ...block, imageUrl: e.target.value })}
               placeholder="Image URL (upload via the portfolio manager first)"
               data-testid="block-editor-image-url-input"
-              className="w-full rounded border border-gray-300 p-2"
+              className="w-full border border-border bg-background p-2 text-foreground focus:border-accent focus:outline-none"
             />
           )}
         </div>
       ))}
 
-      <div className="flex gap-2 text-sm">
-        <button type="button" onClick={() => addBlock("heading")} data-testid="block-editor-add-heading-button">
+      <div className="flex flex-wrap gap-4 text-xs font-medium tracking-[0.1em] text-foreground uppercase">
+        <button
+          type="button"
+          onClick={() => addBlock("heading")}
+          data-testid="block-editor-add-heading-button"
+          className="underline underline-offset-4 transition-colors hover:text-accent"
+        >
           + Heading
         </button>
-        <button type="button" onClick={() => addBlock("paragraph")} data-testid="block-editor-add-paragraph-button">
+        <button
+          type="button"
+          onClick={() => addBlock("paragraph")}
+          data-testid="block-editor-add-paragraph-button"
+          className="underline underline-offset-4 transition-colors hover:text-accent"
+        >
           + Paragraph
         </button>
-        <button type="button" onClick={() => addBlock("bulletList")} data-testid="block-editor-add-bullet-list-button">
-          + Bullet list
+        <button
+          type="button"
+          onClick={() => addBlock("bulletList")}
+          data-testid="block-editor-add-bullet-list-button"
+          className="underline underline-offset-4 transition-colors hover:text-accent"
+        >
+          + Bullet List
         </button>
-        <button type="button" onClick={() => addBlock("image")} data-testid="block-editor-add-image-button">
+        <button
+          type="button"
+          onClick={() => addBlock("image")}
+          data-testid="block-editor-add-image-button"
+          className="underline underline-offset-4 transition-colors hover:text-accent"
+        >
           + Image
         </button>
       </div>

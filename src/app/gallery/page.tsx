@@ -22,7 +22,7 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
     <>
       <Navbar />
       <main className="mx-auto max-w-6xl p-8 pt-32">
-        <h1 className="mb-8 text-center text-4xl font-bold">Browse</h1>
+        <h1 className="mb-8 text-center font-serif text-4xl font-medium tracking-tight text-foreground">Browse</h1>
         <BrowseFeed filters={filters} />
       </main>
     </>

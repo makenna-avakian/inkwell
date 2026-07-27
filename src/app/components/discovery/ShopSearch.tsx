@@ -30,8 +30,8 @@ export default async function ShopSearch({ query, page }: ShopSearchProps) {
               <Image src={shop.avatarImageUrl} alt="" width={48} height={48} className="rounded-full" />
             )}
             <div>
-              <p className="font-semibold">{shop.displayName}</p>
-              {shop.bio && <p className="text-sm text-gray-600">{shop.bio}</p>}
+              <p className="font-serif text-lg font-medium text-foreground">{shop.displayName}</p>
+              {shop.bio && <p className="text-sm text-muted">{shop.bio}</p>}
             </div>
           </Link>
         ))}

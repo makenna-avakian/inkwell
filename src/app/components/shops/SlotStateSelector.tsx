@@ -32,7 +32,7 @@ export default function SlotStateSelector({ shopId, currentState }: SlotStateSel
 
   return (
     <div data-testid="slot-state-selector">
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
       {OPTIONS.map((option) => (
         <button
           key={option.value}
@@ -40,8 +40,10 @@ export default function SlotStateSelector({ shopId, currentState }: SlotStateSel
           onClick={() => handleSelect(option.value)}
           aria-pressed={state === option.value}
           data-testid={`slot-state-selector-${option.value}-option`}
-          className={`mr-2 rounded-lg border px-4 py-2 ${
-            state === option.value ? "bg-black text-white" : "border-gray-300"
+          className={`mr-2 border px-4 py-2 text-xs font-medium tracking-[0.1em] uppercase transition-colors ${
+            state === option.value
+              ? "border-foreground bg-foreground text-surface"
+              : "border-border text-foreground hover:border-accent hover:text-accent"
           }`}
         >
           {option.label}

@@ -46,12 +46,12 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
   }
 
   return (
-    <div data-testid="order-status-panel" className="mt-4 rounded-lg border border-gray-300 p-4">
-      <p data-testid="order-status-panel-status" className="font-semibold">
-        Order status: {status}
+    <div data-testid="order-status-panel" className="mt-4 border border-border bg-surface p-4">
+      <p data-testid="order-status-panel-status" className="text-xs font-medium tracking-[0.1em] text-muted uppercase">
+        Order Status: <span className="text-foreground">{status}</span>
       </p>
-      <p className="text-gray-600">Total: ${(order.subtotalCents / 100).toFixed(2)}</p>
-      {error && <p role="alert">{error}</p>}
+      <p className="mt-1 font-serif text-lg text-foreground">${(order.subtotalCents / 100).toFixed(2)}</p>
+      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {isBuyer && status === "accepted" && !order.stripePaymentIntentId && (
@@ -65,7 +65,7 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
                 return result;
               })
             }
-            className="rounded-lg bg-black px-4 py-2 text-white"
+            className="border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
           >
             Complete payment
           </button>
@@ -76,7 +76,7 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
             type="button"
             data-testid="order-status-panel-mark-in-progress-button"
             onClick={() => run(() => markInProgressAction(order.id), "in_progress")}
-            className="rounded-lg bg-black px-4 py-2 text-white"
+            className="border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
           >
             Mark in progress
           </button>
@@ -87,7 +87,7 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
             type="button"
             data-testid="order-status-panel-submit-for-review-button"
             onClick={() => run(() => submitForReviewAction(order.id), "delivered")}
-            className="rounded-lg bg-black px-4 py-2 text-white"
+            className="border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
           >
             Submit for review
           </button>
@@ -98,7 +98,7 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
             type="button"
             data-testid="order-status-panel-approve-delivery-button"
             onClick={() => run(() => approveDeliveryAction(order.id), "completed")}
-            className="rounded-lg bg-black px-4 py-2 text-white"
+            className="border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
           >
             Approve delivery
           </button>
@@ -109,9 +109,9 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
             type="button"
             data-testid="order-status-panel-request-revision-button"
             onClick={() => setShowRevisionForm(true)}
-            className="rounded-lg border border-gray-300 px-4 py-2"
+            className="border border-border px-4 py-2 text-xs font-medium tracking-[0.1em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent"
           >
-            Request revision
+            Request Revision
           </button>
         )}
 
@@ -120,9 +120,9 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
             type="button"
             data-testid="order-status-panel-cancel-button"
             onClick={() => run(() => cancelOrderAction(order.id), "cancelled")}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-red-600"
+            className="border border-border px-4 py-2 text-xs font-medium tracking-[0.1em] text-red-700 uppercase transition-colors hover:border-red-700"
           >
-            Cancel order
+            Cancel Order
           </button>
         )}
       </div>
@@ -134,15 +134,15 @@ export default function OrderStatusPanel({ order, currentUserId }: OrderStatusPa
             onChange={(e) => setRevisionFeedback(e.target.value)}
             placeholder="What needs to change?"
             data-testid="order-status-panel-revision-feedback-input"
-            className="w-full rounded border border-gray-300 p-2"
+            className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
           />
           <button
             type="button"
             data-testid="order-status-panel-revision-confirm-button"
             onClick={() => run(() => requestRevisionAction(order.id, revisionFeedback), "in_progress")}
-            className="mt-2 rounded-lg bg-black px-4 py-2 text-white"
+            className="mt-2 border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
           >
-            Send revision request
+            Send Revision Request
           </button>
         </div>
       )}

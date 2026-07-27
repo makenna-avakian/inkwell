@@ -17,7 +17,7 @@ export default async function BrowseFeed({ filters }: BrowseFeedProps) {
       </aside>
       <div className="md:col-span-3">
         {result.items.length === 0 ? (
-          <p data-testid="browse-feed-empty">No listings match your filters.</p>
+          <p data-testid="browse-feed-empty" className="text-muted">No listings match your filters.</p>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {result.items.map((item) => (

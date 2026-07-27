@@ -11,7 +11,7 @@ export default async function MyOrdersPage() {
     <>
       <Navbar />
       <main className="mx-auto max-w-2xl p-8 pt-32">
-        <h1 className="mb-6 text-3xl font-bold">My orders</h1>
+        <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">My Orders</h1>
         <MyOrders buyerId={session.user.id} />
       </main>
     </>

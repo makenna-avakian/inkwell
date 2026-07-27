@@ -27,7 +27,7 @@ export default function SignInForm() {
             type="email"
             required
             data-testid="sign-in-email-input"
-            className="w-full rounded-lg border border-gray-300 p-3"
+            className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
           />
         </div>
 
@@ -41,7 +41,7 @@ export default function SignInForm() {
             type="password"
             required
             data-testid="sign-in-password-input"
-            className="w-full rounded-lg border border-gray-300 p-3"
+            className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
           />
         </div>
 
@@ -49,13 +49,13 @@ export default function SignInForm() {
           type="submit"
           disabled={pending || !!state.retryAfterSeconds}
           data-testid="sign-in-submit-button"
-          className="w-full rounded-lg bg-black py-3 text-white transition hover:bg-gray-800 disabled:opacity-50"
+          className="w-full border border-foreground bg-foreground py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
         >
           {pending ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
-      <div className="my-4 text-center text-sm text-gray-500">or</div>
+      <div className="my-4 text-center text-xs tracking-[0.12em] text-muted uppercase">or</div>
 
       <OAuthButton provider="google" />
     </div>

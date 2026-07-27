@@ -21,13 +21,17 @@ export default async function ManageShopPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-8 pt-32">
-      <h1 className="mb-6 text-3xl font-bold">Manage your shop</h1>
+      <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">Manage your shop</h1>
       <ShopProfileForm mode="edit" shopId={shop.id} initialBio={shop.bio ?? undefined} />
 
-      <h2 className="mt-10 mb-4 text-xl font-semibold">Payments</h2>
+      <h2 className="mt-10 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Payments
+      </h2>
       <StripeOnboardingButton shopId={shop.id} payoutsEnabled={payoutsEnabled} />
 
-      <h2 className="mt-10 mb-4 text-xl font-semibold">Portfolio</h2>
+      <h2 className="mt-10 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Portfolio
+      </h2>
       <PortfolioManager
         shopId={shop.id}
         initialImages={images.map((i) => ({ id: i.id, imageUrl: i.imageUrl }))}

@@ -24,7 +24,7 @@ export default function ShopProfileForm({ mode, shopId, initialBio }: ShopProfil
       )}
 
       <div>
-        <label htmlFor="bio" className="mb-1 block text-sm font-medium">
+        <label htmlFor="bio" className="mb-1 block text-sm font-medium text-foreground">
           Bio
         </label>
         <textarea
@@ -33,7 +33,7 @@ export default function ShopProfileForm({ mode, shopId, initialBio }: ShopProfil
           rows={4}
           defaultValue={initialBio}
           data-testid="shop-profile-form-bio-input"
-          className="w-full rounded-lg border border-gray-300 p-3"
+          className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
         />
         {state.fieldErrors.bio && <p className="mt-1 text-sm text-red-700">{state.fieldErrors.bio}</p>}
       </div>
@@ -42,9 +42,9 @@ export default function ShopProfileForm({ mode, shopId, initialBio }: ShopProfil
         type="submit"
         disabled={pending}
         data-testid="shop-profile-form-submit-button"
-        className="rounded-lg bg-black px-6 py-3 text-white disabled:opacity-50"
+        className="border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
       >
-        {pending ? "Saving..." : mode === "create" ? "Create shop" : "Save changes"}
+        {pending ? "Saving..." : mode === "create" ? "Create Shop" : "Save Changes"}
       </button>
     </form>
   );

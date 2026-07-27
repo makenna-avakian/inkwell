@@ -11,7 +11,7 @@ export default async function MyRequestsPage() {
     <>
       <Navbar />
       <main className="mx-auto max-w-2xl p-8 pt-32">
-        <h1 className="mb-6 text-3xl font-bold">My requests</h1>
+        <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">My Requests</h1>
         <MyRequests buyerId={session.user.id} />
       </main>
     </>

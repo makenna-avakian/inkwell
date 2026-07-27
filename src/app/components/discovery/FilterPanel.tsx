@@ -30,7 +30,7 @@ export default function FilterPanel() {
         value={medium}
         onChange={(e) => setMedium(e.target.value)}
         data-testid="filter-panel-medium-input"
-        className="w-full rounded border border-gray-300 p-2"
+        className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
       />
       <div className="flex gap-2">
         <input
@@ -39,7 +39,7 @@ export default function FilterPanel() {
           value={priceMin}
           onChange={(e) => setPriceMin(e.target.value)}
           data-testid="filter-panel-price-min-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           type="number"
@@ -47,15 +47,16 @@ export default function FilterPanel() {
           value={priceMax}
           onChange={(e) => setPriceMax(e.target.value)}
           data-testid="filter-panel-price-max-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
       </div>
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-2 text-sm text-foreground">
         <input
           type="checkbox"
           checked={commissionAvailableOnly}
           onChange={(e) => setCommissionAvailableOnly(e.target.checked)}
           data-testid="filter-panel-commission-available-checkbox"
+          className="accent-accent"
         />
         Accepting commissions only
       </label>
@@ -63,9 +64,9 @@ export default function FilterPanel() {
         type="button"
         onClick={applyFilters}
         data-testid="filter-panel-apply-button"
-        className="rounded-lg bg-black px-6 py-3 text-white"
+        className="border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
       >
-        Apply filters
+        Apply Filters
       </button>
     </div>
   );

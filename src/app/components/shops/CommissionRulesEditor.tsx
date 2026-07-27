@@ -53,17 +53,23 @@ export default function CommissionRulesEditor({
         </p>
       )}
 
-      <h2 className="mb-2 font-semibold">Pricing tiers</h2>
+      <h2 className="mb-2 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Pricing Tiers
+      </h2>
       <TierListEditor tiers={tiers} onChange={setTiers} />
 
-      <h2 className="mt-6 mb-2 font-semibold">Add-ons</h2>
+      <h2 className="mt-6 mb-2 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Add-ons
+      </h2>
       <AddOnListEditor addOns={addOns} onChange={setAddOns} />
 
-      <h2 className="mt-6 mb-2 font-semibold">Rules</h2>
+      <h2 className="mt-6 mb-2 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Rules
+      </h2>
       <BlockEditor blocks={blocks} onChange={setBlocks} />
 
       <div className="mt-6">
-        <label htmlFor="maxQueue" className="mb-1 block text-sm font-medium">
+        <label htmlFor="maxQueue" className="mb-1 block text-sm font-medium text-foreground">
           Max queue (leave blank for no limit)
         </label>
         <input
@@ -72,7 +78,7 @@ export default function CommissionRulesEditor({
           value={maxQueue}
           onChange={(e) => setMaxQueue(e.target.value)}
           data-testid="commission-rules-editor-max-queue-input"
-          className="w-32 rounded border border-gray-300 p-2"
+          className="w-32 border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
       </div>
 
@@ -81,7 +87,7 @@ export default function CommissionRulesEditor({
         onClick={handlePublish}
         disabled={publishing}
         data-testid="commission-rules-editor-publish-button"
-        className="mt-6 rounded-lg bg-black px-6 py-3 text-white disabled:opacity-50"
+        className="mt-6 border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
       >
         {publishing ? "Publishing..." : "Publish"}
       </button>

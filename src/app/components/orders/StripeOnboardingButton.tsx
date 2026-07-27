@@ -24,20 +24,24 @@ export default function StripeOnboardingButton({ shopId, payoutsEnabled }: Strip
   }
 
   if (payoutsEnabled) {
-    return <p data-testid="stripe-onboarding-status">Payments are set up — you can accept paid orders.</p>;
+    return (
+      <p data-testid="stripe-onboarding-status" className="text-muted">
+        Payments are set up — you can accept paid orders.
+      </p>
+    );
   }
 
   return (
     <div data-testid="stripe-onboarding-button">
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
       <button
         type="button"
         onClick={handleClick}
         disabled={pending}
         data-testid="stripe-onboarding-submit-button"
-        className="rounded-lg bg-black px-6 py-3 text-white disabled:opacity-50"
+        className="border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
       >
-        {pending ? "Redirecting…" : "Set up payments with Stripe"}
+        {pending ? "Redirecting…" : "Set Up Payments with Stripe"}
       </button>
     </div>
   );

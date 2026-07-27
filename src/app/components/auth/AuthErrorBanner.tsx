@@ -8,7 +8,7 @@ export default function AuthErrorBanner({ message }: AuthErrorBannerProps) {
     <div
       role="alert"
       data-testid="auth-error-banner"
-      className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+      className="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800"
     >
       {message}
     </div>

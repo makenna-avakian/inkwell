@@ -41,13 +41,13 @@ export default function RequestActions({ requestId }: RequestActionsProps) {
 
   return (
     <div data-testid="request-actions" className="mt-4">
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
 
       <button
         type="button"
         onClick={handleAccept}
         data-testid="request-detail-accept-button"
-        className="mr-2 rounded-lg bg-black px-6 py-3 text-white"
+        className="mr-2 border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
       >
         Accept
       </button>
@@ -57,7 +57,7 @@ export default function RequestActions({ requestId }: RequestActionsProps) {
           type="button"
           onClick={() => setShowDeclineForm(true)}
           data-testid="request-detail-decline-button"
-          className="rounded-lg border border-gray-300 px-6 py-3"
+          className="border border-border px-6 py-3 text-xs font-medium tracking-[0.12em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent"
         >
           Decline
         </button>
@@ -68,15 +68,15 @@ export default function RequestActions({ requestId }: RequestActionsProps) {
             onChange={(e) => setDeclineReason(e.target.value)}
             placeholder="Reason for declining"
             data-testid="request-detail-decline-reason-input"
-            className="rounded border border-gray-300 p-2"
+            className="border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
           />
           <button
             type="button"
             onClick={handleDecline}
             data-testid="request-detail-decline-confirm-button"
-            className="ml-2 rounded-lg bg-black px-4 py-2 text-white"
+            className="ml-2 border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
           >
-            Confirm decline
+            Confirm Decline
           </button>
         </div>
       )}

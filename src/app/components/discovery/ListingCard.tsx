@@ -24,15 +24,15 @@ export default function ListingCard({
     <Link
       href={`/shops/${shopId}`}
       data-testid={`listing-card-${listingId}`}
-      className="block overflow-hidden rounded-lg border shadow transition hover:shadow-lg"
+      className="block overflow-hidden border border-border bg-surface transition-colors hover:border-foreground"
     >
       {imageUrl && (
         <Image src={imageUrl} alt={title} width={400} height={300} className="h-48 w-full object-cover" />
       )}
       <div className="p-4">
-        <h3 className="font-semibold">{title}</h3>
-        <p className="text-gray-600">${(priceCents / 100).toFixed(2)}</p>
-        <p className="text-sm text-gray-500">
+        <h3 className="font-serif text-lg font-medium text-foreground">{title}</h3>
+        <p className="text-muted">${(priceCents / 100).toFixed(2)}</p>
+        <p className="text-sm text-muted">
           {shopDisplayName} — <span data-testid="listing-card-slot-state">{shopSlotState}</span>
         </p>
       </div>

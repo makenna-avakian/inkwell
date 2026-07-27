@@ -24,7 +24,7 @@ export default function SignUpForm() {
             name="displayName"
             type="text"
             data-testid="sign-up-display-name-input"
-            className="w-full rounded-lg border border-gray-300 p-3"
+            className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
           />
         </div>
 
@@ -38,7 +38,7 @@ export default function SignUpForm() {
             type="email"
             required
             data-testid="sign-up-email-input"
-            className="w-full rounded-lg border border-gray-300 p-3"
+            className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
           />
           {state.fieldErrors.email && (
             <p className="mt-1 text-sm text-red-700">{state.fieldErrors.email}</p>
@@ -56,7 +56,7 @@ export default function SignUpForm() {
             required
             minLength={8}
             data-testid="sign-up-password-input"
-            className="w-full rounded-lg border border-gray-300 p-3"
+            className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
           />
           {state.fieldErrors.password && (
             <p className="mt-1 text-sm text-red-700">{state.fieldErrors.password}</p>
@@ -67,13 +67,13 @@ export default function SignUpForm() {
           type="submit"
           disabled={pending}
           data-testid="sign-up-submit-button"
-          className="w-full rounded-lg bg-black py-3 text-white transition hover:bg-gray-800 disabled:opacity-50"
+          className="w-full border border-foreground bg-foreground py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
         >
           {pending ? "Creating account..." : "Sign up"}
         </button>
       </form>
 
-      <div className="my-4 text-center text-sm text-gray-500">or</div>
+      <div className="my-4 text-center text-xs tracking-[0.12em] text-muted uppercase">or</div>
 
       <OAuthButton provider="google" />
     </div>

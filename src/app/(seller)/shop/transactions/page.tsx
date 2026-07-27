@@ -18,10 +18,12 @@ export default async function ShopTransactionsPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-8 pt-32">
-      <h1 className="mb-6 text-3xl font-bold">Transactions</h1>
+      <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">Transactions</h1>
       <StripeOnboardingButton shopId={shop.id} payoutsEnabled={payoutsEnabled} />
 
-      <h2 className="mt-8 mb-4 text-xl font-semibold">Orders</h2>
+      <h2 className="mt-8 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Orders
+      </h2>
       <SellerTransactions sellerId={session.user.id} />
     </main>
   );

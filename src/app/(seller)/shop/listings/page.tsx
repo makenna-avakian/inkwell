@@ -15,7 +15,7 @@ export default async function ListingsPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-8 pt-32">
-      <h1 className="mb-6 text-3xl font-bold">Listings</h1>
+      <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">Listings</h1>
       <ListingManager
         shopId={shop.id}
         initialListings={listings.map((l) => ({

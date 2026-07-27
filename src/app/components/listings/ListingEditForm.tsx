@@ -56,25 +56,25 @@ export default function ListingEditForm({
           name="title"
           defaultValue={initialTitle}
           data-testid="listing-edit-form-title-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="description"
           defaultValue={initialDescription}
           data-testid="listing-edit-form-description-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="medium"
           defaultValue={initialMedium}
           data-testid="listing-edit-form-medium-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="styleTags"
           defaultValue={initialStyleTags.join(", ")}
           data-testid="listing-edit-form-style-tags-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="price"
@@ -83,25 +83,26 @@ export default function ListingEditForm({
           min="0"
           defaultValue={(initialPriceCents / 100).toFixed(2)}
           data-testid="listing-edit-form-price-input"
-          className="w-32 rounded border border-gray-300 p-2"
+          className="w-32 border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending}
           data-testid="listing-edit-form-save-button"
-          className="rounded-lg bg-black px-6 py-3 text-white disabled:opacity-50"
+          className="border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
         >
-          {pending ? "Saving..." : "Save changes"}
+          {pending ? "Saving..." : "Save Changes"}
         </button>
       </form>
 
-      <div className="mt-6">
-        {statusError && <p role="alert">{statusError}</p>}
+      <div className="mt-6 flex flex-wrap gap-2">
+        {statusError && <p role="alert" className="w-full text-red-700">{statusError}</p>}
         <button
           type="button"
           onClick={() => handleStatusChange("sold")}
           disabled={status === "sold"}
           data-testid="listing-edit-form-mark-sold-button"
+          className="border border-border px-4 py-2 text-xs font-medium tracking-[0.1em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
         >
           Mark Sold
         </button>
@@ -110,6 +111,7 @@ export default function ListingEditForm({
           onClick={() => handleStatusChange("removed")}
           disabled={status === "removed"}
           data-testid="listing-edit-form-remove-button"
+          className="border border-border px-4 py-2 text-xs font-medium tracking-[0.1em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
         >
           Remove
         </button>
@@ -118,6 +120,7 @@ export default function ListingEditForm({
           onClick={() => handleStatusChange("available")}
           disabled={status === "available"}
           data-testid="listing-edit-form-restore-button"
+          className="border border-border px-4 py-2 text-xs font-medium tracking-[0.1em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
         >
           Restore to Available
         </button>

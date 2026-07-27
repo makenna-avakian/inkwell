@@ -22,7 +22,7 @@ describe("WaitlistJoinButton", () => {
     await waitFor(() => {
       expect(screen.getByTestId("waitlist-join-submit-button")).toBeDisabled();
     });
-    expect(screen.getByText("Joined waitlist")).toBeInTheDocument();
+    expect(screen.getByText("Joined Waitlist")).toBeInTheDocument();
   });
 
   it("shows an error and stays enabled on failure", async () => {

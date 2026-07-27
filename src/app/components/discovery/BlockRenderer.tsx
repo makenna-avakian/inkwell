@@ -13,7 +13,7 @@ export default function BlockRenderer({ blocks }: BlockRendererProps) {
         switch (block.type) {
           case "heading":
             return (
-              <h3 key={index} className="mt-4 text-xl font-semibold">
+              <h3 key={index} className="mt-4 font-serif text-xl font-medium text-foreground">
                 {block.text}
               </h3>
             );
@@ -35,7 +35,7 @@ export default function BlockRenderer({ blocks }: BlockRendererProps) {
             return (
               <figure key={index} className="mt-4">
                 <Image src={block.imageUrl} alt={block.caption ?? ""} width={400} height={300} />
-                {block.caption && <figcaption className="text-sm text-gray-500">{block.caption}</figcaption>}
+                {block.caption && <figcaption className="text-sm text-muted">{block.caption}</figcaption>}
               </figure>
             );
           default:

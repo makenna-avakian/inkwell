@@ -23,36 +23,47 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
   return (
     <main data-testid="public-shop-page" className="mx-auto max-w-4xl p-8 pt-32">
       {shop.bannerImageUrl && (
-        <Image src={shop.bannerImageUrl} alt="" width={1200} height={300} className="w-full rounded-lg object-cover" />
+        <Image src={shop.bannerImageUrl} alt="" width={1200} height={300} className="w-full object-cover" />
       )}
-      <div className="mt-4 flex items-center gap-4">
+      <div className="mt-6 flex items-center gap-4">
         {shop.avatarImageUrl && (
           <Image src={shop.avatarImageUrl} alt="" width={80} height={80} className="rounded-full" />
         )}
-        <h1 className="text-3xl font-bold">{shop.displayName}</h1>
+        <h1 className="font-serif text-4xl font-medium tracking-tight text-foreground">{shop.displayName}</h1>
         {publishedRules && (
-          <span data-testid="public-shop-page-slot-state" className="rounded-full border px-3 py-1 text-sm">
+          <span
+            data-testid="public-shop-page-slot-state"
+            className="border border-border px-3 py-1 text-xs font-medium tracking-[0.1em] text-muted uppercase"
+          >
             {publishedRules.slotState}
           </span>
         )}
       </div>
-      {shop.bio && <p className="mt-4">{shop.bio}</p>}
+      {shop.bio && <p className="mt-4 max-w-2xl text-muted">{shop.bio}</p>}
 
-      <h2 className="mt-10 mb-4 text-xl font-semibold">Portfolio</h2>
+      <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Portfolio
+      </h2>
       <div className="grid grid-cols-3 gap-4">
         {portfolio.map((image) => (
-          <Image key={image.id} src={image.imageUrl} alt="" width={200} height={200} className="rounded-lg object-cover" />
+          <Image key={image.id} src={image.imageUrl} alt="" width={200} height={200} className="object-cover" />
         ))}
       </div>
 
-      <h2 className="mt-10 mb-4 text-xl font-semibold">Commission Rules</h2>
+      <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Commission Rules
+      </h2>
       {publishedRules ? (
         <BlockRenderer blocks={publishedRules.version.rulesContent as ContentBlock[]} />
       ) : (
-        <p data-testid="public-shop-page-no-rules">This shop hasn&apos;t published commission rules yet.</p>
+        <p data-testid="public-shop-page-no-rules" className="text-muted">
+          This shop hasn&apos;t published commission rules yet.
+        </p>
       )}
 
-      <h2 className="mt-10 mb-4 text-xl font-semibold">Request a Commission</h2>
+      <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Request a Commission
+      </h2>
       {publishedRules && publishedRules.slotState === "open" && (
         session?.user ? (
           <CommissionRequestForm
@@ -60,8 +71,8 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
             tiers={publishedRules.version.tiers as { id: string; name: string; priceCents: number }[]}
           />
         ) : (
-          <p>
-            <Link href="/sign-in" className="underline">
+          <p className="text-muted">
+            <Link href="/sign-in" className="text-foreground underline underline-offset-4 hover:text-accent">
               Sign in
             </Link>{" "}
             to request a commission.
@@ -72,8 +83,8 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
         session?.user ? (
           <WaitlistJoinButton shopId={shop.id} />
         ) : (
-          <p>
-            <Link href="/sign-in" className="underline">
+          <p className="text-muted">
+            <Link href="/sign-in" className="text-foreground underline underline-offset-4 hover:text-accent">
               Sign in
             </Link>{" "}
             to join the waitlist.
@@ -81,10 +92,14 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
         )
       )}
       {publishedRules && publishedRules.slotState === "closed" && (
-        <p data-testid="public-shop-page-closed">This shop isn&apos;t accepting commissions right now.</p>
+        <p data-testid="public-shop-page-closed" className="text-muted">
+          This shop isn&apos;t accepting commissions right now.
+        </p>
       )}
 
-      <h2 className="mt-10 mb-4 text-xl font-semibold">Available Now</h2>
+      <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Available Now
+      </h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {availableListings.map((listing) => (
           <div key={listing.id}>
@@ -100,8 +115,8 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
             {session?.user ? (
               <BuyNowButton listingId={listing.id} />
             ) : (
-              <p className="mt-2 text-sm">
-                <Link href="/sign-in" className="underline">
+              <p className="mt-2 text-sm text-muted">
+                <Link href="/sign-in" className="text-foreground underline underline-offset-4 hover:text-accent">
                   Sign in
                 </Link>{" "}
                 to buy now.

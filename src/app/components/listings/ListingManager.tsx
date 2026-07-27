@@ -26,11 +26,13 @@ export default function ListingManager({ shopId, initialListings }: ListingManag
     <div data-testid="listing-manager">
       <ul className="mb-8 space-y-2">
         {initialListings.map((listing) => (
-          <li key={listing.id} data-testid={`listing-manager-row-${listing.id}`}>
-            <Link href={`/shop/listings/${listing.id}`} className="underline">
+          <li key={listing.id} data-testid={`listing-manager-row-${listing.id}`} className="text-foreground">
+            <Link href={`/shop/listings/${listing.id}`} className="underline underline-offset-4 hover:text-accent">
               {listing.title}
             </Link>{" "}
-            — ${(listing.priceCents / 100).toFixed(2)} ({listing.status})
+            <span className="text-muted">
+              — ${(listing.priceCents / 100).toFixed(2)} ({listing.status})
+            </span>
           </li>
         ))}
       </ul>
@@ -47,25 +49,25 @@ export default function ListingManager({ shopId, initialListings }: ListingManag
           placeholder="Title"
           required
           data-testid="listing-manager-title-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="description"
           placeholder="Description (optional)"
           data-testid="listing-manager-description-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="medium"
           placeholder="Medium (e.g. Watercolor)"
           data-testid="listing-manager-medium-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="styleTags"
           placeholder="Style tags, comma-separated (e.g. pet portrait, landscape)"
           data-testid="listing-manager-style-tags-input"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <input
           name="price"
@@ -75,15 +77,15 @@ export default function ListingManager({ shopId, initialListings }: ListingManag
           placeholder="Price"
           required
           data-testid="listing-manager-price-input"
-          className="w-32 rounded border border-gray-300 p-2"
+          className="w-32 border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending}
           data-testid="listing-manager-create-button"
-          className="rounded-lg bg-black px-6 py-3 text-white disabled:opacity-50"
+          className="border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
         >
-          {pending ? "Creating..." : "Create listing"}
+          {pending ? "Creating..." : "Create Listing"}
         </button>
       </form>
     </div>

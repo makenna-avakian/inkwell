@@ -17,7 +17,7 @@ export default async function ListingDetailPage({
 
   return (
     <main className="mx-auto max-w-2xl p-8 pt-32">
-      <h1 className="mb-6 text-3xl font-bold">Edit listing</h1>
+      <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">Edit Listing</h1>
       <ListingEditForm
         listingId={listing.id}
         initialTitle={listing.title}

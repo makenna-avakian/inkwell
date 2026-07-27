@@ -20,9 +20,13 @@ export default function SearchBar() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search artists or shops"
         data-testid="search-bar-input"
-        className="w-full rounded border border-gray-300 p-3"
+        className="w-full border border-border bg-surface p-3 text-foreground focus:border-accent focus:outline-none"
       />
-      <button type="submit" data-testid="search-bar-submit-button" className="mt-2 rounded-lg bg-black px-6 py-3 text-white">
+      <button
+        type="submit"
+        data-testid="search-bar-submit-button"
+        className="mt-2 border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
+      >
         Search
       </button>
     </form>

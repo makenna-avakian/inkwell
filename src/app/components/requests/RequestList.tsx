@@ -17,16 +17,19 @@ interface RequestListProps {
 /** Shared list rendering for RequestInbox (seller) and MyRequests (buyer). */
 export default function RequestList({ items, detailBasePath, testIdPrefix }: RequestListProps) {
   if (items.length === 0) {
-    return <p data-testid={`${testIdPrefix}-empty`}>No requests yet.</p>;
+    return <p data-testid={`${testIdPrefix}-empty`} className="text-muted">No requests yet.</p>;
   }
 
   return (
-    <ul data-testid={testIdPrefix} className="space-y-3">
+    <ul data-testid={testIdPrefix} className="divide-y divide-border border-t border-border">
       {items.map((item) => (
         <li key={item.id} data-testid={`${testIdPrefix}-row-${item.id}`}>
-          <Link href={`${detailBasePath}/${item.id}`} className="flex items-center justify-between">
+          <Link
+            href={`${detailBasePath}/${item.id}`}
+            className="flex items-center justify-between py-3 text-foreground transition-colors hover:text-accent"
+          >
             <span>{item.description}</span>
-            <span className="text-sm text-gray-500">
+            <span className="text-xs font-medium tracking-[0.1em] text-muted uppercase">
               {item.status}
               <StatusBadgeIndicator unread={item.unread} />
             </span>

@@ -11,8 +11,8 @@ export default async function NewShopPage() {
   if (existingShop) redirect("/shop");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-8 pt-32">
-      <h1 className="mb-6 text-3xl font-bold">Open your shop</h1>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8 pt-32">
+      <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">Open your shop</h1>
       <div className="w-full max-w-lg">
         <ShopProfileForm mode="create" />
       </div>

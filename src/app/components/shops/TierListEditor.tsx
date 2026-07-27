@@ -37,7 +37,7 @@ export default function TierListEditor({ tiers, onChange }: TierListEditorProps)
             onChange={(e) => updateTier(tier.id, { name: e.target.value })}
             placeholder="Tier name"
             data-testid="tier-list-editor-name-input"
-            className="flex-1 rounded border border-gray-300 p-2"
+            className="flex-1 border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
           />
           <input
             type="number"
@@ -47,12 +47,13 @@ export default function TierListEditor({ tiers, onChange }: TierListEditorProps)
             }
             placeholder="Price"
             data-testid="tier-list-editor-price-input"
-            className="w-24 rounded border border-gray-300 p-2"
+            className="w-24 border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
           />
           <button
             type="button"
             onClick={() => removeTier(tier.id)}
             data-testid="tier-list-editor-remove-button"
+            className="text-xs font-medium tracking-[0.1em] text-muted uppercase transition-colors hover:text-accent"
           >
             Remove
           </button>
@@ -62,9 +63,9 @@ export default function TierListEditor({ tiers, onChange }: TierListEditorProps)
         type="button"
         onClick={addTier}
         data-testid="tier-list-editor-add-button"
-        className="text-sm underline"
+        className="text-xs font-medium tracking-[0.1em] text-foreground uppercase underline underline-offset-4 transition-colors hover:text-accent"
       >
-        + Add tier
+        + Add Tier
       </button>
     </div>
   );

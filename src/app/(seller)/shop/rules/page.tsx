@@ -16,9 +16,9 @@ export default async function ShopRulesPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-8 pt-32">
-      <h1 className="mb-6 text-3xl font-bold">Commission rules</h1>
+      <h1 className="mb-6 font-serif text-4xl font-medium tracking-tight text-foreground">Commission Rules</h1>
 
-      <h2 className="mb-2 font-semibold">Slot status</h2>
+      <h2 className="mb-2 text-xs font-medium tracking-[0.15em] text-muted uppercase">Slot Status</h2>
       <SlotStateSelector shopId={shop.id} currentState={published?.slotState ?? "closed"} />
 
       <div className="mt-10">

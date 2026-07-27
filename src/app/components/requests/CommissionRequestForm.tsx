@@ -22,7 +22,7 @@ export default function CommissionRequestForm({ shopId, tiers }: CommissionReque
 
   if (state.success) {
     return (
-      <p data-testid="commission-request-form-success">
+      <p data-testid="commission-request-form-success" className="text-muted">
         Request sent! You&apos;ll hear back from the artist soon.
       </p>
     );
@@ -45,7 +45,7 @@ export default function CommissionRequestForm({ shopId, tiers }: CommissionReque
           name="tierId"
           required
           data-testid="commission-request-form-tier-select"
-          className="w-full rounded border border-gray-300 p-2"
+          className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         >
           {tiers.map((tier) => (
             <option key={tier.id} value={tier.id}>
@@ -60,7 +60,7 @@ export default function CommissionRequestForm({ shopId, tiers }: CommissionReque
         placeholder="Describe what you'd like commissioned"
         required
         data-testid="commission-request-form-description-input"
-        className="w-full rounded border border-gray-300 p-2"
+        className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
       />
 
       <input
@@ -70,23 +70,23 @@ export default function CommissionRequestForm({ shopId, tiers }: CommissionReque
         min="0"
         placeholder="Your budget (optional)"
         data-testid="commission-request-form-budget-input"
-        className="w-full rounded border border-gray-300 p-2"
+        className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
       />
 
       <input
         name="deadlinePreference"
         placeholder="Deadline preference (optional)"
         data-testid="commission-request-form-deadline-input"
-        className="w-full rounded border border-gray-300 p-2"
+        className="w-full border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
       />
 
       <button
         type="submit"
         disabled={pending}
         data-testid="commission-request-form-submit-button"
-        className="rounded-lg bg-black px-6 py-3 text-white disabled:opacity-50"
+        className="border border-foreground bg-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent disabled:opacity-50"
       >
-        {pending ? "Sending..." : "Send request"}
+        {pending ? "Sending..." : "Send Request"}
       </button>
     </form>
   );

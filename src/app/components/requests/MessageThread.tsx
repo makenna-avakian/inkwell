@@ -58,27 +58,31 @@ export default function MessageThread({
           <li
             key={message.id}
             data-testid={`message-thread-item-${message.id}`}
-            className={message.senderId === currentUserId ? "text-right" : "text-left"}
+            className={
+              message.senderId === currentUserId
+                ? "text-right text-foreground"
+                : "text-left text-muted"
+            }
           >
             {message.body}
           </li>
         ))}
       </ul>
 
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="mt-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-4 flex gap-2">
         <input
           value={body}
           onChange={(e) => setBody(e.target.value)}
           data-testid="message-thread-compose-input"
-          className="flex-1 rounded border border-gray-300 p-2"
+          className="flex-1 border border-border bg-surface p-2 text-foreground focus:border-accent focus:outline-none"
         />
         <button
           type="button"
           onClick={handleSend}
           data-testid="message-thread-send-button"
-          className="rounded-lg bg-black px-4 py-2 text-white"
+          className="border border-foreground bg-foreground px-4 py-2 text-xs font-medium tracking-[0.1em] text-surface uppercase transition-colors hover:border-accent hover:bg-accent"
         >
           Send
         </button>

@@ -24,12 +24,16 @@ export default async function RequestDetail({ requestId, callerId }: RequestDeta
 
   return (
     <div data-testid="request-detail">
-      <h1 className="text-2xl font-bold">{request.description}</h1>
-      <p data-testid="request-detail-status" className="mt-2 text-gray-600">
-        Status: {request.status}
+      <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground">{request.description}</h1>
+      <p data-testid="request-detail-status" className="mt-2 text-xs font-medium tracking-[0.1em] text-muted uppercase">
+        Status: <span className="text-foreground">{request.status}</span>
       </p>
-      {request.budgetCents && <p>Budget: ${(request.budgetCents / 100).toFixed(2)}</p>}
-      {request.declineReason && <p>Decline reason: {request.declineReason}</p>}
+      {request.budgetCents && (
+        <p className="mt-1 text-muted">Budget: ${(request.budgetCents / 100).toFixed(2)}</p>
+      )}
+      {request.declineReason && (
+        <p className="mt-1 text-muted">Decline reason: {request.declineReason}</p>
+      )}
 
       {isShopOwner && request.status === "requested" && (
         <RequestActions requestId={requestId} />
@@ -37,7 +41,9 @@ export default async function RequestDetail({ requestId, callerId }: RequestDeta
 
       {order && <OrderStatusPanel order={order} currentUserId={callerId} />}
 
-      <h2 className="mt-8 mb-4 text-xl font-semibold">Messages</h2>
+      <h2 className="mt-10 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Messages
+      </h2>
       <MessageThread
         requestId={requestId}
         currentUserId={callerId}

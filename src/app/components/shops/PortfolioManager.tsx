@@ -82,7 +82,7 @@ export default function PortfolioManager({ shopId, initialImages }: PortfolioMan
             alt=""
             width={200}
             height={200}
-            className="rounded-lg object-cover"
+            className="object-cover"
           />
         ))}
       </div>

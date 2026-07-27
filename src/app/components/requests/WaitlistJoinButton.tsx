@@ -22,15 +22,15 @@ export default function WaitlistJoinButton({ shopId }: WaitlistJoinButtonProps) 
 
   return (
     <div data-testid="waitlist-join-button">
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
       <button
         type="button"
         onClick={handleClick}
         disabled={joined}
         data-testid="waitlist-join-submit-button"
-        className="rounded-lg border border-gray-300 px-6 py-3 disabled:opacity-50"
+        className="border border-foreground px-6 py-3 text-xs font-medium tracking-[0.12em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
       >
-        {joined ? "Joined waitlist" : "Join waitlist"}
+        {joined ? "Joined Waitlist" : "Join Waitlist"}
       </button>
     </div>
   );
