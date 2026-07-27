@@ -1,13 +1,16 @@
 import { z } from "zod";
-import { hashPassword } from "@/server/auth/password";
+import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { getRequiredDelaySeconds } from "@/server/auth/rate-limit";
 import {
   createUser,
   findUserByEmail,
+  findUserById,
   getRecentLoginAttempts,
   recordLoginAttempt,
+  updateUserRow,
 } from "@/server/auth/repository";
 import { isSeller } from "@/server/shops/service";
+import type { User } from "@/server/db/schema";
 
 /** BR-1: email format validation. BR-2: password minimum length (breach-list
  *  check happens server-side in Auth.js's Credentials `authorize`, not here,
@@ -93,3 +96,51 @@ export async function recordLoginAttemptOutcome(
  * (ShopProfile existence check) now that its schema exists.
  */
 export { isSeller };
+
+export class NoPasswordSetError extends Error {
+  constructor() {
+    super("This account signed up with Google and doesn't have a password set.");
+    this.name = "NoPasswordSetError";
+  }
+}
+
+export class IncorrectPasswordError extends Error {
+  constructor() {
+    super("Current password is incorrect.");
+    this.name = "IncorrectPasswordError";
+  }
+}
+
+export const updateDisplayNameSchema = z.object({
+  displayName: z.string().trim().min(1).max(60),
+});
+
+export async function updateDisplayName(userId: string, displayName: string): Promise<User> {
+  const parsed = updateDisplayNameSchema.parse({ displayName });
+  const user = await updateUserRow(userId, { displayName: parsed.displayName });
+  if (!user) throw new Error("User not found.");
+  return user;
+}
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
+
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const parsed = changePasswordSchema.parse({ currentPassword, newPassword });
+
+  const user = await findUserById(userId);
+  if (!user) throw new Error("User not found.");
+  if (!user.passwordHash) throw new NoPasswordSetError();
+
+  const isCorrect = await verifyPassword(parsed.currentPassword, user.passwordHash);
+  if (!isCorrect) throw new IncorrectPasswordError();
+
+  const passwordHash = await hashPassword(parsed.newPassword);
+  await updateUserRow(userId, { passwordHash });
+}

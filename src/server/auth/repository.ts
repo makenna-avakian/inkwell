@@ -63,7 +63,7 @@ export async function linkOAuthAccount(
 
 export async function updateUserRow(
   id: string,
-  patch: Partial<Pick<NewUser, "displayName">>,
+  patch: Partial<Pick<NewUser, "displayName" | "passwordHash">>,
 ): Promise<User | undefined> {
   const [user] = await db.update(users).set(patch).where(eq(users.id, id)).returning();
   return user;
