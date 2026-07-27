@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { findShopById } from "@/server/shops/repository";
 import { getRequestWithMessages, markRequestSeen } from "@/server/requests/service";
+import { findOrderByRequestId } from "@/server/orders/repository";
 import MessageThread from "./MessageThread";
 import RequestActions from "./RequestActions";
+import OrderStatusPanel from "@/app/components/orders/OrderStatusPanel";
 
 interface RequestDetailProps {
   requestId: string;
@@ -16,6 +18,7 @@ export default async function RequestDetail({ requestId, callerId }: RequestDeta
   const { request, messages } = data;
   const shop = await findShopById(request.shopId);
   const isShopOwner = shop?.userId === callerId;
+  const order = request.status === "accepted" ? await findOrderByRequestId(requestId) : undefined;
 
   await markRequestSeen(requestId, callerId);
 
@@ -31,6 +34,8 @@ export default async function RequestDetail({ requestId, callerId }: RequestDeta
       {isShopOwner && request.status === "requested" && (
         <RequestActions requestId={requestId} />
       )}
+
+      {order && <OrderStatusPanel order={order} currentUserId={callerId} />}
 
       <h2 className="mt-8 mb-4 text-xl font-semibold">Messages</h2>
       <MessageThread

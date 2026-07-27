@@ -46,8 +46,8 @@ Build sequence: 1. Auth & Accounts → 2. Shops & Commission Rules → 3. Listin
 - [x] **Unit 2: Shops & Commission Rules** — COMPLETE (all Construction stages done, verified, committed to `main`)
 - [x] **Unit 3: Listings** — COMPLETE (all Construction stages done, verified, committed to `main`)
 - [x] **Unit 4: Browse & Discovery** — COMPLETE (all Construction stages done, verified, committed to `main`)
-- [ ] Unit 5: Commission Requests & Messaging — all design stages ✅, Code Generation ✅ (awaiting approval — verified: tsc/eslint/vitest/next build all pass) → Unit 6
-- [ ] Unit 6: Orders & Payments — NOT STARTED
+- [x] **Unit 5: Commission Requests & Messaging** — COMPLETE (all Construction stages done, verified, committed to `main`)
+- [ ] Unit 6: Orders & Payments — Functional Design ✅, NFR Requirements ✅, NFR Design ✅, Infrastructure Design ✅ (awaiting approval) → Code Generation — FINAL UNIT of Phase 1
 - [ ] Build and Test (all units) — NOT STARTED
 
 ## Key Decisions Log

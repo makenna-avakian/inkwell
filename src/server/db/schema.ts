@@ -77,6 +77,8 @@ export const shopProfiles = pgTable("shop_profiles", {
   bio: text("bio"),
   // Array of { label: string, url: string }
   socialLinks: jsonb("social_links").notNull().default([]),
+  // Unit 6 (Orders & Payments) addition — see unit-6-orders/functional-design/domain-entities.md
+  stripeConnectAccountId: text("stripe_connect_account_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -256,3 +258,45 @@ export type WaitlistEntry = typeof waitlistEntries.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 export type RequestReadReceipt = typeof requestReadReceipts.$inferSelect;
+
+// --- Unit 6: Orders & Payments ---
+// See aidlc-docs/construction/unit-6-orders/functional-design/domain-entities.md
+
+export const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requestId: uuid("request_id").references(() => commissionRequests.id),
+  listingId: uuid("listing_id").references(() => listings.id),
+  buyerId: uuid("buyer_id")
+    .notNull()
+    .references(() => users.id),
+  sellerId: uuid("seller_id")
+    .notNull()
+    .references(() => users.id),
+  subtotalCents: integer("subtotal_cents").notNull(),
+  platformFeeCents: integer("platform_fee_cents").notNull(),
+  sellerNetCents: integer("seller_net_cents").notNull(),
+  status: text("status", {
+    enum: ["accepted", "in_progress", "delivered", "completed", "cancelled"],
+  })
+    .notNull()
+    .default("accepted"),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  stripeTransferId: text("stripe_transfer_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const processedWebhookEvents = pgTable("processed_webhook_events", {
+  stripeEventId: text("stripe_event_id").primaryKey(),
+  processedAt: timestamp("processed_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type NewOrder = typeof orders.$inferInsert;
+export type ProcessedWebhookEvent = typeof processedWebhookEvents.$inferSelect;

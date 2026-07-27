@@ -15,6 +15,8 @@ Built with the [AI-DLC](aidlc-docs/aidlc-state.md) workflow — see `aidlc-docs/
    - `CRON_SECRET` — any long random string (protects the cleanup cron endpoint)
    - `SENTRY_DSN` — optional for local dev
    - `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET_NAME` / `R2_PUBLIC_URL` — Cloudflare R2 credentials for shop/portfolio image uploads (see `aidlc-docs/construction/shared-infrastructure.md`)
+   - `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` — from a [Stripe test-mode](https://dashboard.stripe.com/test/apikeys) account; see "Stripe test-mode setup" below
+   - `APP_BASE_URL` — e.g. `http://localhost:3000` for local dev; used to build Checkout/Connect redirect URLs
 
 2. Install dependencies and run migrations:
    ```bash
@@ -28,6 +30,20 @@ Built with the [AI-DLC](aidlc-docs/aidlc-state.md) workflow — see `aidlc-docs/
    npm run dev
    ```
    Open [http://localhost:3000](http://localhost:3000).
+
+## Stripe test-mode setup
+
+Orders & Payments (Unit 6) uses Stripe Connect (Express accounts) and Stripe Checkout, both in test mode for local dev:
+
+1. Create a [Stripe account](https://dashboard.stripe.com/register) (or use an existing one) and switch to test mode.
+2. Copy the test **Secret key** from the [API keys page](https://dashboard.stripe.com/test/apikeys) into `STRIPE_SECRET_KEY`.
+3. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli) and forward webhooks to your local server:
+   ```bash
+   stripe listen --forward-to localhost:3000/api/webhooks/stripe
+   ```
+   Copy the webhook signing secret it prints (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
+4. From `/shop`, click "Set up payments with Stripe" to run through Connect Express onboarding using [Stripe's test data](https://stripe.com/docs/connect/testing) (test SSN, test bank account, etc.) — payouts won't be enabled for a connected account until onboarding is complete, which gates commission acceptance and buy-now listings (BR-2).
+5. Use [Stripe's test card numbers](https://stripe.com/docs/testing) (e.g. `4242 4242 4242 4242`) at Checkout.
 
 ## Testing
 
@@ -46,4 +62,4 @@ Integration tests against a real database (`src/server/auth/repository.test.ts` 
 
 ## Current Status
 
-Phase 1 (MVP) is in progress. Units 1-5 (Auth & Accounts; Shops & Commission Rules; Listings; Browse & Discovery; Commission Requests & Messaging) are implemented — buyers can now submit commission requests and message sellers directly from a shop page; Unit 6 (Orders & Payments) is not yet built — see [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for live progress.
+Phase 1 (MVP) construction is complete. All 6 units (Auth & Accounts; Shops & Commission Rules; Listings; Browse & Discovery; Commission Requests & Messaging; Orders & Payments) are implemented — buyers can submit commission requests or buy listed pieces outright, sellers accept/manage the order lifecycle through delivery, and payments run through Stripe Connect with escrow-style delayed capture on the commission path. See [`aidlc-docs/aidlc-state.md`](aidlc-docs/aidlc-state.md) for the full construction history.

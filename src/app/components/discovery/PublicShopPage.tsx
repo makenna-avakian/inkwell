@@ -8,6 +8,7 @@ import ListingCard from "./ListingCard";
 import type { ContentBlock } from "@/server/shops/blocks";
 import CommissionRequestForm from "@/app/components/requests/CommissionRequestForm";
 import WaitlistJoinButton from "@/app/components/requests/WaitlistJoinButton";
+import BuyNowButton from "@/app/components/orders/BuyNowButton";
 
 interface PublicShopPageProps {
   shopId: string;
@@ -86,16 +87,27 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
       <h2 className="mt-10 mb-4 text-xl font-semibold">Available Now</h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {availableListings.map((listing) => (
-          <ListingCard
-            key={listing.id}
-            listingId={listing.id}
-            title={listing.title}
-            priceCents={listing.priceCents}
-            imageUrl={null}
-            shopId={shop.id}
-            shopDisplayName={shop.displayName}
-            shopSlotState={publishedRules?.slotState ?? "closed"}
-          />
+          <div key={listing.id}>
+            <ListingCard
+              listingId={listing.id}
+              title={listing.title}
+              priceCents={listing.priceCents}
+              imageUrl={null}
+              shopId={shop.id}
+              shopDisplayName={shop.displayName}
+              shopSlotState={publishedRules?.slotState ?? "closed"}
+            />
+            {session?.user ? (
+              <BuyNowButton listingId={listing.id} />
+            ) : (
+              <p className="mt-2 text-sm">
+                <Link href="/sign-in" className="underline">
+                  Sign in
+                </Link>{" "}
+                to buy now.
+              </p>
+            )}
+          </div>
         ))}
       </div>
     </main>

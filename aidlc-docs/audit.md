@@ -796,3 +796,113 @@
 **Context**: CONSTRUCTION - Unit 5, Code Generation, awaiting user approval.
 
 ---
+
+## Unit 5 (Commission Requests & Messaging) — Approved; Unit 5 COMPLETE
+**Timestamp**: 2026-07-26T10:20:00Z
+**User Input**: "commit, then continue"
+**AI Response**: Approved. Committed to `main` (36 files, +1899/-20). Unit 5 is now fully complete. Proceeding to Unit 6: Orders & Payments — the final unit, and the highest-risk one (real Stripe Connect payment movement).
+**Context**: CONSTRUCTION - Unit 5 complete; transitioning to Unit 6 (final unit).
+
+---
+
+## Unit 6 (Orders & Payments) — Functional Design Plan Issued (final unit, real money movement)
+**Timestamp**: 2026-07-26T10:25:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-6-orders-functional-design-plan.md`. Documented several decisions directly (single `orders` table for both fulfillment and payment fields, lazy Stripe client init mirroring Unit 2's `db/client.ts` fix, idempotency keys on all Stripe calls, no milestone payments). Flagged a real gap: no story actually triggers a refund despite requirements.md promising "refunds and dispute handling." Asked 2 questions: Order status pipeline (3-state vs. 4-state with explicit revision) and Phase 1 refund scope. Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 6, Functional Design, Step 4 gate.
+
+---
+
+## Unit 6 (Orders & Payments) — Functional Design Answers Received
+**Timestamp**: 2026-07-26T10:30:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (3 states: in_progress/delivered/completed, revision re-enters in_progress), Q2=B (minimal cancel-while-in_progress action releasing the authorization, not a true refund). While designing the domain model, confirmed Order needs an initial `'accepted'` status distinct from `'in_progress'` (already implied by Application Design's separate `createFromRequest`/`markInProgress` methods, not a new question) — full status enum: accepted/in_progress/delivered/completed/cancelled. Also identified that Stripe Connect onboarding (S-22) requires a schema addition to Unit 2's `ShopProfile` (a `stripeConnectAccountId` column) — a cross-unit extension, same pattern as Unit 4's medium/styleTags addition to Unit 3. Proceeding to generate artifacts.
+**Context**: CONSTRUCTION - Unit 6, Functional Design, Step 6 (artifact generation).
+
+---
+
+## Unit 6 (Orders & Payments) — Functional Design Complete
+**Timestamp**: 2026-07-26T10:45:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated `domain-entities.md` (Order with 5-state machine, ProcessedWebhookEvent, ShopProfile.stripeConnectAccountId cross-unit addition), `business-logic-model.md` (CommissionLifecycleService resolving Unit 5's forward dependency, Stripe Checkout Sessions rather than raw PaymentIntents/Elements for simpler correct PCI-scope handling, explicit reconciliation model for NFR-4's "never trust client confirmation alone"), `business-rules.md` (BR-1..BR-8 + PBT-01, held to the "all critical paths" bar given this unit's risk level), `frontend-components.md` (cross-unit UI integrations into Units 2/4/5's existing pages rather than isolated new screens, since an Order is the continuation of a CommissionRequest's lifecycle).
+**Context**: CONSTRUCTION - Unit 6, Functional Design, Step 7, awaiting user approval.
+
+---
+
+## Unit 6 (Orders & Payments) — Functional Design Approved; NFR Requirements Plan Issued
+**Timestamp**: 2026-07-26T10:50:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Functional Design approved. Created `unit-6-orders-nfr-requirements-plan.md` with 2 questions: currency scope (USD only vs. USD+CAD, given the US+Canada launch decision from Requirements Analysis) and whether to explicitly check Stripe's `payouts_enabled` flag before allowing commission acceptance/listing. Presented to user; awaiting answers.
+**Context**: CONSTRUCTION - Unit 6, NFR Requirements, Step 4 gate.
+
+---
+
+## Unit 6 (Orders & Payments) — NFR Requirements Answers Received
+**Timestamp**: 2026-07-26T10:55:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (USD only for Phase 1), Q2=A (explicitly check `payouts_enabled` before allowing commission acceptance/buy-now listing — BR-2 extended with this check). No ambiguities. Proceeding to generate NFR Requirements artifacts.
+**Context**: CONSTRUCTION - Unit 6, NFR Requirements, Step 6 (artifact generation).
+
+---
+
+## Unit 6 (Orders & Payments) — NFR Requirements Complete; NFR Design Plan Issued
+**Timestamp**: 2026-07-26T11:00:00Z
+**User Input**: N/A (approval/answer prompt about to be sent to user)
+**AI Response**: Generated NFR Requirements (USD only, live payouts_enabled check, isolation/idempotency/webhook-verification security notes) and `tech-stack-decisions.md`. Updated business-rules.md BR-2 to reflect the live payouts_enabled check. Created `unit-6-orders-nfr-design-plan.md` with 1 question: whether to use Stripe SDK's native `maxNetworkRetries` (more correct for this specific dependency) instead of the hand-rolled retry wrapper used by every prior unit — a deliberate, flagged deviation rather than a silent one. Presented to user; awaiting answer.
+**Context**: CONSTRUCTION - Unit 6, NFR Design, Step 4 gate.
+
+---
+
+## Unit 6 (Orders & Payments) — NFR Design Answer Received
+**Timestamp**: 2026-07-26T11:05:00Z
+**User Input**: "done"
+**AI Response**: Q1=A (Stripe SDK's native `maxNetworkRetries: 1`, not the hand-rolled wrapper). Proceeding to generate NFR Design and Infrastructure Design artifacts.
+**Context**: CONSTRUCTION - Unit 6, NFR Design, Step 6 (artifact generation).
+
+---
+
+## Unit 6 (Orders & Payments) — NFR Design & Infrastructure Design Complete
+**Timestamp**: 2026-07-26T11:10:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Generated NFR Design (Stripe SDK-native retry, fail-closed payouts_enabled check, webhook signature verification before any parsing) and Infrastructure Design (Stripe env vars, public unauthenticated webhook endpoint secured by signature not network access, sequence diagram, and an explicit note that unlike prior units, external Stripe state isn't undone by a code rollback — idempotency and webhook reconciliation carry more weight here). Updated `aidlc-state.md`.
+**Context**: CONSTRUCTION - Unit 6, design stages complete, awaiting user approval to proceed to Code Generation.
+
+---
+
+## Unit 6 (Orders & Payments) — Design Stages Approved
+**Timestamp**: 2026-07-26T11:15:00Z
+**User Input**: "Continue to Next Stage"
+**AI Response**: Approved. Proceeding to Code Generation planning for Unit 6 — the final unit.
+**Context**: CONSTRUCTION - Unit 6 design stages complete; transitioning to Code Generation.
+
+---
+
+## Unit 6 (Orders & Payments) — Code Generation Plan Issued
+**Timestamp**: 2026-07-26T11:20:00Z
+**User Input**: N/A (approval prompt about to be sent to user)
+**AI Response**: Created `aidlc-docs/construction/plans/unit-6-orders-code-generation-plan.md` — 17 steps, including Step 6's four cross-unit integrations (Unit 5's RequestActions/RequestDetail, Unit 4's PublicShopPage, Unit 2's shop page) and Step 7's Stripe webhook Route Handler. Presented to user for plan approval before generation begins — this is the final unit of Phase 1.
+**Context**: CONSTRUCTION - Unit 6, Code Generation Part 1 (Planning), gate.
+
+---
+
+## Unit 6 (Orders & Payments) — Code Generation Plan Approved
+**Timestamp**: 2026-07-26T11:25:00Z
+**User Input**: "Approve & Continue"
+**AI Response**: Plan approved. Beginning Part 2 Generation — final unit of Phase 1.
+**Context**: CONSTRUCTION - Unit 6, Code Generation Part 2 (Generation) starting.
+
+---
+
+## Unit 6 (Orders & Payments) — Code Generation Complete
+**Timestamp**: 2026-07-26T12:10:00Z
+**User Input**: N/A (session resumed mid-generation after a context-window compaction; no new user input during this stretch)
+**AI Response**: Completed all 17 steps of the Code Generation plan: business logic (`payment.ts`, `repository.ts`, `transitions.ts`, `service.ts`) + PBT/unit tests; API layer (Server Actions in `src/app/orders/actions.ts`, Stripe webhook Route Handler at `src/app/api/webhooks/stripe/route.ts`) + tests; repository integration tests (`describe.skipIf`); frontend components (`OrderStatusPanel`, `BuyNowButton`, `StripeOnboardingButton`, `MyOrders`, `SellerTransactions`) + pages (`/orders`, `/shop/transactions`, `/checkout/success`, `/checkout/cancelled`) + tests; the four cross-unit integration edits (Unit 5's `RequestActions.tsx`/`RequestDetail.tsx`, Unit 4's `PublicShopPage.tsx`, Unit 2's `/shop` page); finalized the migration file; updated README (Phase 1 complete, Stripe test-mode setup instructions).
+
+Also installed the previously-declared-but-never-installed `stripe` npm dependency (`npm install` — it was in `package.json` from Step 1 but missing from `node_modules`, breaking `payment.test.ts` on first run), and fixed a cross-unit fallout in `src/server/shops/service.test.ts` (its mock `SHOP` object was missing the `stripeConnectAccountId` field this unit added to the `shopProfiles` schema).
+
+**Design addition beyond the original plan text**: added `getCheckoutUrlForOrder` (service) / `payOrderAction` (Server Action) — frontend-components.md called for a "Complete Payment" link on `OrderStatusPanel` for an unpaid Order, but the Checkout Session URL from `acceptAndCreateOrder` is only ever returned to the seller (who accepted, not who pays) and isn't persisted on the `orders` row. These regenerate it on demand for the buyer via `createCheckoutSession`'s existing idempotency key rather than adding a column for an ephemeral, single-use Stripe URL. Also corrected `RequestActions.tsx`'s accept flow: it was initially wired to redirect the *seller's* browser to the Stripe Checkout URL returned by `acceptAndCreateOrderAction`, which is wrong (the seller who accepts isn't the one who pays) — changed to `router.refresh()` instead, with the buyer completing payment via `OrderStatusPanel`'s new Complete Payment button.
+
+Final verification: `tsc --noEmit` clean, `eslint .` clean, `vitest run` — 168 passed / 20 skipped (integration tests requiring `DATABASE_URL`), `next build --turbopack` — all 21 routes compiled successfully including the new Unit 6 routes.
+**Context**: CONSTRUCTION - Unit 6, Code Generation Part 2 (Generation) complete. This is the final unit of Phase 1 Construction.
+
+---

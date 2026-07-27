@@ -1,22 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { acceptRequestAction, declineRequestAction } from "@/app/requests/actions";
+import { useRouter } from "next/navigation";
+import { declineRequestAction } from "@/app/requests/actions";
+import { acceptAndCreateOrderAction } from "@/app/orders/actions";
 
 interface RequestActionsProps {
   requestId: string;
 }
 
 export default function RequestActions({ requestId }: RequestActionsProps) {
+  const router = useRouter();
   const [declineReason, setDeclineReason] = useState("");
   const [showDeclineForm, setShowDeclineForm] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [done, setDone] = useState(false);
 
+  /**
+   * Accepting now also creates the escrowed Order (Unit 6). The buyer, not the
+   * seller who's clicking Accept here, is the one who pays — so we refresh the
+   * page rather than redirect; the buyer completes payment via OrderStatusPanel.
+   */
   async function handleAccept() {
-    const result = await acceptRequestAction(requestId);
-    if (result.formError) setError(result.formError);
-    else setDone(true);
+    const result = await acceptAndCreateOrderAction(requestId);
+    if (result.formError) {
+      setError(result.formError);
+    } else {
+      setDone(true);
+      router.refresh();
+    }
   }
 
   async function handleDecline() {

@@ -65,6 +65,7 @@ const SHOP = {
   avatarImageUrl: null,
   bio: null,
   socialLinks: [],
+  stripeConnectAccountId: null,
   createdAt: new Date(),
 };
 
