@@ -40,8 +40,18 @@ async function authorizeCredentials(
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Adapter is still required for Google OAuth's user/account persistence
+  // even under the JWT session strategy — only its session-related methods
+  // (createSession/getSessionAndUser/updateSession/deleteSession) go unused.
   adapter: buildAdapter(),
-  session: { strategy: "database" }, // Question 2: A
+  // JWT, not database (superseding Question 2: A) — Auth.js does not support
+  // database-strategy sessions together with the Credentials provider: a
+  // credentials sign-in silently falls back to a JWT cookie regardless of
+  // this setting, leaving the `session` callback's `user` param undefined
+  // and the session unreadable. Confirmed via direct curl against
+  // /api/auth/callback/credentials — the cookie set was already a JWE, and
+  // /api/auth/session returned null despite it being sent back correctly.
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
       credentials: {
@@ -67,10 +77,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/sign-in",
   },
   callbacks: {
-    async session({ session, user }) {
-      // Database strategy: `user` is populated from the adapter, not a JWT.
-      if (session.user) {
-        session.user.id = user.id;
+    // JWT strategy: `user` is only present on the initial sign-in call, so
+    // it must be copied onto the token to survive subsequent requests.
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && typeof token.id === "string") {
+        session.user.id = token.id;
       }
       return session;
     },

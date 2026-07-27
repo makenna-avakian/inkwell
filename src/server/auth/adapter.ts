@@ -108,11 +108,12 @@ export function buildAdapter(): Adapter {
       await deleteSessionByToken(sessionToken);
     },
 
-    // Required by Auth.js's database-session strategy even though no Phase 1
-    // flow calls these directly: getSessionAndUser triggers an updateSession
-    // call on every request past sessionMaxAge/updateAge (rolling renewal),
-    // and assertConfig() throws MissingAdapterMethods at startup if either is
-    // absent regardless of whether our own code ever invokes them.
+    // updateUser is still exercised (OAuth account linking can update a
+    // user's name); updateSession/createSession/getSessionAndUser/
+    // deleteSession are effectively dead code now that config.ts uses the
+    // JWT session strategy (Auth.js only calls them under "database"), but
+    // are kept implemented since Auth.js's assertConfig() requires every
+    // Adapter method to exist as long as an adapter is configured at all.
     async updateUser(data) {
       if (!data.id) throw new Error("updateUser requires an id");
       const user = data.name
