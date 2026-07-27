@@ -946,6 +946,48 @@ Flagged two pre-launch follow-ups (not addressed this session, out of Phase 1 MV
 **AI Response**: `src/server/auth/adapter.ts`'s hand-rolled Auth.js Adapter (built in Unit 1) intentionally omitted `updateUser`/`updateSession`, reasoning that no Phase 1 flow calls them directly. That reasoning was wrong: Auth.js's `assertConfig()` requires both methods to exist on any adapter used with the `"database"` session strategy, regardless of whether the app's own code invokes them — and `updateSession` is in fact called internally by Auth.js for session-rolling renewal on every request past `updateAge`. This was never caught by the test suite because every test mocks `auth()`/the adapter's dependents rather than exercising the real Auth.js config, and this was the first time the dev server was actually run end-to-end in this session.
 
 Fixed by adding `updateUserRow`/`updateSessionExpiry` to `src/server/auth/repository.ts` and implementing `updateUser`/`updateSession` on the adapter (real, minimal implementations — not stubs), plus a new `adapter.test.ts` (5 tests, mocked repository). Verified live: restarted the dev server, signed up a real test account through the browser, confirmed no `MissingAdapterMethods` error and that the navbar correctly reflected an authenticated session. Full suite re-run: 173 passed / 20 skipped (up from 168 — the 5 new adapter tests), `tsc`/`eslint` clean.
-**Context**: Ad hoc post-Build-and-Test fix, found during the user's first local run of the actual dev server. Not yet committed — pending user confirmation.
+**Context**: Ad hoc post-Build-and-Test fix, found during the user's first local run of the actual dev server.
+
+---
+
+## Adapter Fix Committed; UI Design System Requested
+**Timestamp**: 2026-07-26T13:15:00Z
+**User Input**: "please. we need to improve the ui next."
+**AI Response**: Committed the adapter fix + migration consolidation as `afff4d4`. Asked what the UI pass should focus on (visual design system / layout & responsiveness / key page polish) and what aesthetic direction — user chose "Visual design system" then "Warm & editorial" (cream/paper, warm ink, serif display type, ArtForum-like) with no existing brand assets to carry over. Built the core tokens (globals.css, layout.tsx's `Fraunces` font) and one representative page (homepage + Navbar) first rather than sweeping all ~40 files blind, to confirm direction before propagating.
+**Context**: Ad hoc post-Phase-1 work, user-directed, not run through Requirements Analysis (visual-only, no new components/business rules — adaptive workflow skip criteria).
+
+---
+
+## UI Design System — Full Rollout
+**Timestamp**: 2026-07-26T13:45:00Z
+**User Input**: "yes really like that. i want this to feel very elevated, like an art editorial. like ArtForum" → then, after a sharper/more austere revision (uppercase tracked masthead nav, squared bordered buttons, terracotta pulled back to a rare accent): "Yes, roll it out everywhere"
+**AI Response**: Propagated the design system across all remaining page/component files (auth, discovery, listings, orders, requests, shops, plus page wrappers) — replaced `bg-white`/`bg-black`/`text-gray-*`/`rounded-lg`/`rounded-full` with the new tokens and conventions throughout, keeping `rounded-full` only for circular avatars and the unread-notification dot. Fixed one test broken by an intentional label-capitalization change (WaitlistJoinButton). Verified: `tsc`/`eslint` clean, full suite 173 passed / 20 skipped, `next build --turbopack` — all 21 routes compiled. Spot-checked sign-in, gallery, and homepage live in-browser.
+**Context**: Ad hoc post-Phase-1 UI work, user-directed and user-approved before full rollout.
+
+---
+
+## New Feature Request — Account Settings Page
+**Timestamp**: 2026-07-26T14:00:00Z
+**User Input**: "thanks! I've realized we need to create a user page as well." → clarified scope: "Account settings" (view/edit display name, view email, change password) reachable via "Navbar avatar/name"
+**AI Response**: Added `updateDisplayName`/`changePassword` to `src/server/auth/service.ts` (with `NoPasswordSetError`/`IncorrectPasswordError`), broadened `updateUserRow` to accept `passwordHash`, new `src/app/account/actions.ts` + `src/app/account/page.tsx`, `DisplayNameForm`/`ChangePasswordForm` client components. Full test coverage added to `service.test.ts`, new `actions.test.ts`, `DisplayNameForm.test.tsx`, `ChangePasswordForm.test.tsx`.
+**Context**: Small, self-contained feature — no new units/cross-cutting business rules, built directly per adaptive workflow's skip criteria for User Stories/Application Design/Units Generation.
+
+---
+
+## Critical Bug Found — Credentials Sign-In Never Established a Working Session
+**Timestamp**: 2026-07-26T14:20:00Z
+**User Input**: N/A — found while trying to visually verify the new account page in-browser; sign-in appeared to succeed (redirect to "/") but the navbar never reflected a signed-in state.
+**AI Response**: Initially misread the browser automation pane's own fixed-position UI chrome (a circle icon present on every page regardless of app state) as the app's logged-in avatar, and had earlier told the user session verification was "confirmed" based on that misreading — flagged and corrected this to the user directly rather than let the wrong claim stand. Verified properly via direct `curl` against `/api/auth/csrf` → `/api/auth/callback/credentials` → `/api/auth/session`: the sign-in cookie set was a JWE (JWT), not the plain adapter-generated token, and `/api/auth/session` returned `null` despite the cookie being sent correctly. Root cause: Auth.js does not support database-strategy sessions (`nfr-design/logical-components.md`'s Question 2: A) together with the Credentials provider — a credentials sign-in silently falls back to JWT regardless of configured strategy, and the `session` callback (written expecting the database-strategy `{session, user}` signature) never populated `session.user.id` since `user` is undefined under JWT.
+
+Presented the finding and two fix options (switch to JWT app-wide vs. bridge JWT→database for credentials only); user chose JWT. Changed `session: { strategy: "jwt" }`, added a `jwt` callback to carry `user.id` onto the token, updated the `session` callback to read `token.id`. Verified via the same `curl` sequence (now returns a populated session) and live in-browser (sign-in → navbar shows authenticated state → `/account` renders). Full suite still 188/192 passed (varies by point in the sequence) after each change, `tsc`/`eslint` clean, `next build --turbopack` — 22 routes (including new `/account`) compiled.
+**Context**: Significant correction — this bug had been present since Unit 1 and undetected through all of Units 1-6's construction and Build and Test, because every automated test mocks `auth()` rather than exercising the real Auth.js config end-to-end.
+
+---
+
+## Navbar User Menu Requested
+**Timestamp**: 2026-07-26T14:35:00Z
+**User Input**: "love. can we make the diusplay name a rounded icon, then have a dropdown? the dropdown can hold sign out for the buyers and both \"my shop\" and sign out for the sellers"
+**AI Response**: New `src/app/components/UserMenu.tsx` client component — rounded initial-letter avatar button, click-outside-to-close dropdown containing Account (kept, since removing the only entry point to the just-built account page would be a regression), My Shop (now gated on a real `isSeller` check, previously shown to every signed-in user regardless), and Sign out. `Navbar.tsx` now calls `isSeller` server-side. New `UserMenu.test.tsx` (4 tests). Verified live in-browser: dropdown opens showing the display name, Account, and Sign out for a non-seller test account (My Shop correctly absent).
+**Context**: Small follow-up UI refinement to the Navbar, same ad hoc post-Phase-1 work.
 
 ---
