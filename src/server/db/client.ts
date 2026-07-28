@@ -1,5 +1,5 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 
 /**
@@ -15,11 +15,19 @@ import * as schema from "./schema";
  * database (src/server/*\/repository.test.ts) are separately gated with
  * `describe.skipIf(!process.env.DATABASE_URL)` and only run in CI/locally
  * once a real DATABASE_URL is provided.
+ *
+ * Uses postgres-js (plain TCP wire protocol) rather than
+ * @neondatabase/serverless's HTTP driver — the latter only speaks Neon's
+ * serverless HTTP proxy protocol and can't reach a plain Postgres server at
+ * all (confirmed: CI's ephemeral postgres:16 service container failed every
+ * integration test with "fetch failed"). TCP works identically against
+ * Neon (which exposes a standard wire-protocol endpoint alongside its HTTP
+ * proxy) and any other Postgres instance, local or CI.
  */
 const connectionString =
   process.env.DATABASE_URL ??
   "postgresql://placeholder:placeholder@localhost:5432/placeholder";
 
-const sql = neon(connectionString);
+const client = postgres(connectionString);
 
-export const db = drizzle(sql, { schema });
+export const db = drizzle(client, { schema });

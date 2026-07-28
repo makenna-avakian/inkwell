@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import {
   orders,
@@ -32,9 +32,13 @@ export async function updateOrderRow(
     >
   >,
 ): Promise<Order> {
+  // updatedAt uses the database's own clock (sql`now()`), not a client-computed
+  // `new Date()` — comparing a locally-computed timestamp against createdAt's
+  // server-computed defaultNow() across a network round-trip is fragile to
+  // clock skew between the app server and the database.
   const [row] = await db
     .update(orders)
-    .set({ ...patch, updatedAt: new Date() })
+    .set({ ...patch, updatedAt: sql`now()` })
     .where(eq(orders.id, orderId))
     .returning();
   return row;

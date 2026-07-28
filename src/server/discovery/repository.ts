@@ -108,7 +108,7 @@ export async function searchShopsQuery(query: string): Promise<ShopSearchRow[]> 
     ORDER BY rank DESC
   `);
 
-  return rows.rows.map((r) => ({
+  return rows.map((r) => ({
     shopId: r.shop_id,
     displayName: r.display_name,
     bio: r.bio,
