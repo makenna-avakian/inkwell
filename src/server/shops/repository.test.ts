@@ -96,5 +96,39 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
     // v1 is still readable, unmutated (BR-4).
     const stillThere = await repo.getRuleVersionByNumber(shop.id, 1);
     expect(stillThere?.id).toBe(v1.id);
+
+    expect((await repo.getRuleVersionById(v2.id))?.version).toBe(2);
+    expect(await repo.getExistingVersionNumbers(shop.id)).toEqual(
+      expect.arrayContaining([1, 2]),
+    );
+  });
+
+  it("finds a shop by userId and by id", async () => {
+    const user = await createTestUser("find-shop@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+
+    expect((await repo.findShopByUserId(user.id))?.id).toBe(shop.id);
+    expect((await repo.findShopById(shop.id))?.userId).toBe(user.id);
+  });
+
+  it("lists portfolio images in position order", async () => {
+    const user = await createTestUser("portfolio-list@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const first = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+    const second = await repo.addPortfolioImageRow(shop.id, "https://x/2.png");
+
+    const images = await repo.listPortfolioImages(shop.id);
+    expect(images.map((i) => i.id)).toEqual([first.id, second.id]);
+  });
+
+  it("sets the slot state and max queue on commission settings", async () => {
+    const user = await createTestUser("settings@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+
+    const withSlot = await repo.setSlotStateRow(shop.id, "waitlist");
+    expect(withSlot.slotState).toBe("waitlist");
+
+    const withQueue = await repo.setMaxQueueRow(shop.id, 5);
+    expect(withQueue.maxQueue).toBe(5);
   });
 });

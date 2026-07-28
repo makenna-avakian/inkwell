@@ -58,12 +58,43 @@ describe("publishRuleSetAction", () => {
     });
     expect(result.formError).toBe("At least one tier is required.");
   });
+
+  it("surfaces a NotShopOwnerError message", async () => {
+    mockPublish.mockRejectedValue(new NotShopOwnerError());
+    const result = await publishRuleSetAction("shop-1", { tiers: [], addOns: [], rulesContent: [] });
+    expect(result.formError).toBe("You do not have permission to modify this shop.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockPublish.mockRejectedValue(new Error("boom"));
+    const result = await publishRuleSetAction("shop-1", { tiers: [], addOns: [], rulesContent: [] });
+    expect(result.formError).toBe("Something went wrong. Please try again.");
+  });
+
+  it("requires a signed-in caller (falls through to the generic message, since a plain Error isn't RuleSetValidationError/NotShopOwnerError)", async () => {
+    mockAuth.mockResolvedValue(null as never);
+    const result = await publishRuleSetAction("shop-1", { tiers: [], addOns: [], rulesContent: [] });
+    expect(result.formError).toBe("Something went wrong. Please try again.");
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
 });
 
 describe("setSlotStateAction", () => {
+  it("returns success on a valid state change", async () => {
+    const result = await setSlotStateAction("shop-1", "open");
+    expect(mockSetSlotState).toHaveBeenCalledWith("shop-1", "user-1", "open");
+    expect(result.success).toBe(true);
+  });
+
   it("rejects a non-owner", async () => {
     mockSetSlotState.mockRejectedValue(new NotShopOwnerError());
     const result = await setSlotStateAction("shop-1", "open");
     expect(result.formError).toBeTruthy();
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockSetSlotState.mockRejectedValue(new Error("boom"));
+    const result = await setSlotStateAction("shop-1", "open");
+    expect(result.formError).toBe("Something went wrong. Please try again.");
   });
 });

@@ -16,11 +16,13 @@ describe.skipIf(!process.env.DATABASE_URL)("orders repository (integration)", ()
   });
 
   afterEach(async () => {
+    // shopCommissionSettings.currentVersionId FKs to commissionRuleVersions —
+    // must be cleared first or the FK constraint blocks the version delete.
     await db.delete(schema.processedWebhookEvents);
     await db.delete(schema.orders);
     await db.delete(schema.commissionRequests);
-    await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.shopCommissionSettings);
+    await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.shopProfiles);
     await db.delete(schema.users);
   });

@@ -91,4 +91,72 @@ describe.skipIf(!process.env.DATABASE_URL)("auth repository (integration)", () =
     expect(attempts).toHaveLength(3);
     expect(attempts[0].succeeded).toBe(true); // newest first
   });
+
+  it("deleteOldLoginAttempts removes only attempts older than the cutoff", async () => {
+    await repo.recordLoginAttempt("old-attempts@example.com", false);
+    const [oldAttempt] = await db
+      .select()
+      .from(schema.loginAttempts)
+      .where(eq(schema.loginAttempts.email, "old-attempts@example.com"));
+    await db
+      .update(schema.loginAttempts)
+      .set({ attemptedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 60) })
+      .where(eq(schema.loginAttempts.id, oldAttempt.id));
+
+    await repo.recordLoginAttempt("old-attempts@example.com", true);
+
+    const deletedCount = await repo.deleteOldLoginAttempts(
+      new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
+    );
+    expect(deletedCount).toBe(1);
+    const remaining = await repo.getRecentLoginAttempts("old-attempts@example.com");
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].succeeded).toBe(true);
+  });
+
+  it("findUserById finds a user by id", async () => {
+    const created = await repo.createUser({
+      email: "by-id@example.com",
+      displayName: "by-id",
+      passwordHash: null,
+    });
+    expect((await repo.findUserById(created.id))?.email).toBe("by-id@example.com");
+  });
+
+  it("updateUserRow updates displayName/passwordHash", async () => {
+    const created = await repo.createUser({
+      email: "update-user@example.com",
+      displayName: "Old Name",
+      passwordHash: null,
+    });
+    const updated = await repo.updateUserRow(created.id, { displayName: "New Name" });
+    expect(updated?.displayName).toBe("New Name");
+  });
+
+  it("updateSessionExpiry updates the session's expiry", async () => {
+    const user = await repo.createUser({
+      email: "session-update@example.com",
+      displayName: "session-update",
+      passwordHash: null,
+    });
+    const session = await repo.createSession(user.id);
+    const newExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60);
+
+    const updated = await repo.updateSessionExpiry(session.sessionToken, newExpiry);
+
+    expect(updated?.expiresAt.getTime()).toBe(newExpiry.getTime());
+  });
+
+  it("links and finds a Google OAuth account", async () => {
+    const user = await repo.createUser({
+      email: "oauth-test@example.com",
+      displayName: "oauth-test",
+      passwordHash: null,
+    });
+    await repo.linkOAuthAccount(user.id, "google", "google-account-123");
+
+    const found = await repo.findOAuthAccount("google", "google-account-123");
+    expect(found?.userId).toBe(user.id);
+    expect(await repo.findOAuthAccount("google", "nonexistent")).toBeUndefined();
+  });
 });

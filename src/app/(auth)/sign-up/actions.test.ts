@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 vi.mock("@/server/auth/service", () => ({
   signUp: vi.fn(),
@@ -61,6 +62,26 @@ describe("signUpAction", () => {
     );
 
     expect(result.fieldErrors.email).toBeTruthy();
+    expect(mockSignIn).not.toHaveBeenCalled();
+  });
+
+  it("maps a ZodError's issues onto the matching form fields", async () => {
+    const zodError = new z.ZodError([
+      { code: "too_small", minimum: 8, type: "string", inclusive: true, path: ["password"], message: "Password must be at least 8 characters." },
+      { code: "custom", path: ["email"], message: "Invalid email." },
+      { code: "custom", path: ["unrelatedField"], message: "ignored" },
+    ]);
+    mockSignUp.mockRejectedValue(zodError);
+
+    const result = await signUpAction(
+      { fieldErrors: {} },
+      formData({ email: "bad", password: "short" }),
+    );
+
+    expect(result.fieldErrors).toEqual({
+      password: "Password must be at least 8 characters.",
+      email: "Invalid email.",
+    });
     expect(mockSignIn).not.toHaveBeenCalled();
   });
 

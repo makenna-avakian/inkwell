@@ -64,4 +64,13 @@ describe("changePasswordAction", () => {
     );
     expect(result.formError).toBe("Current password is incorrect.");
   });
+
+  it("falls back to a generic message for a non-Error rejection", async () => {
+    mockChangePassword.mockRejectedValue("nope");
+    const result = await changePasswordAction(
+      {},
+      formData({ currentPassword: "wrong", newPassword: "newpassword123" }),
+    );
+    expect(result.formError).toBe("Something went wrong. Please try again.");
+  });
 });

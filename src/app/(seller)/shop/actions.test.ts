@@ -38,6 +38,7 @@ import {
   requestPortfolioUploadUrl,
   updateShop,
 } from "@/server/shops/service";
+import { InvalidImageError } from "@/server/shops/storage";
 import {
   confirmAvatarImageAction,
   confirmBannerImageAction,
@@ -107,6 +108,12 @@ describe("createShopAction", () => {
     const result = await createShopAction({ fieldErrors: {} }, formData({}));
     expect(result.formError).toBe("You already have a shop.");
   });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockCreateShop.mockRejectedValue(new Error("boom"));
+    const result = await createShopAction({ fieldErrors: {} }, formData({}));
+    expect(result.formError).toBe("Something went wrong. Please try again.");
+  });
 });
 
 describe("updateShopAction", () => {
@@ -129,6 +136,22 @@ describe("updateShopAction", () => {
     mockUpdateShop.mockRejectedValue(new NotShopOwnerError());
     const result = await updateShopAction("shop-1", { fieldErrors: {} }, formData({}));
     expect(result.formError).toBe("You do not have permission to modify this shop.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockUpdateShop.mockRejectedValue(new Error("boom"));
+    const result = await updateShopAction("shop-1", { fieldErrors: {} }, formData({}));
+    expect(result.formError).toBe("Something went wrong. Please try again.");
+  });
+
+  it("returns field errors when shopName/bio fail validation", async () => {
+    const result = await updateShopAction(
+      "shop-1",
+      { fieldErrors: {} },
+      formData({ shopName: "x".repeat(81) }),
+    );
+    expect(result.fieldErrors.shopName).toBeTruthy();
+    expect(mockUpdateShop).not.toHaveBeenCalled();
   });
 });
 
@@ -159,6 +182,18 @@ describe("requestPortfolioUploadUrlAction", () => {
     expect(result.error).toBeTruthy();
     expect(result.uploadUrl).toBeUndefined();
   });
+
+  it("returns an error message for an invalid image", async () => {
+    mockRequestUpload.mockRejectedValue(new InvalidImageError("Unsupported file type."));
+    const result = await requestPortfolioUploadUrlAction("shop-1", "a.gif", "image/gif", 1000);
+    expect(result.error).toBe("Unsupported file type.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockRequestUpload.mockRejectedValue(new Error("boom"));
+    const result = await requestPortfolioUploadUrlAction("shop-1", "a.png", "image/png", 1000);
+    expect(result.error).toBe("Couldn't start upload. Please try again.");
+  });
 });
 
 describe("confirmPortfolioImageAction", () => {
@@ -166,6 +201,18 @@ describe("confirmPortfolioImageAction", () => {
     const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png");
     expect(mockConfirmImage).toHaveBeenCalledWith("shop-1", "user-1", "https://x/y.png");
     expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error message for a non-owner", async () => {
+    mockConfirmImage.mockRejectedValue(new NotShopOwnerError());
+    const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png");
+    expect(result.error).toBe("You do not have permission to modify this shop.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockConfirmImage.mockRejectedValue(new Error("boom"));
+    const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png");
+    expect(result.error).toBe("Couldn't save the image. Please try again.");
   });
 });
 
@@ -185,6 +232,30 @@ describe("requestBannerUploadUrlAction / confirmBannerImageAction", () => {
     expect(mockConfirmBanner).toHaveBeenCalledWith("shop-1", "user-1", "https://x/banner.png");
     expect(result.error).toBeUndefined();
   });
+
+  it("returns an error message for an invalid banner image", async () => {
+    mockRequestBannerUpload.mockRejectedValue(new InvalidImageError("Unsupported file type."));
+    const result = await requestBannerUploadUrlAction("shop-1", "banner.gif", "image/gif", 1000);
+    expect(result.error).toBe("Unsupported file type.");
+  });
+
+  it("falls back to a generic message for an unexpected banner upload error", async () => {
+    mockRequestBannerUpload.mockRejectedValue(new Error("boom"));
+    const result = await requestBannerUploadUrlAction("shop-1", "banner.png", "image/png", 1000);
+    expect(result.error).toBe("Couldn't start upload. Please try again.");
+  });
+
+  it("returns an error message when confirming a banner as a non-owner", async () => {
+    mockConfirmBanner.mockRejectedValue(new NotShopOwnerError());
+    const result = await confirmBannerImageAction("shop-1", "https://x/banner.png");
+    expect(result.error).toBe("You do not have permission to modify this shop.");
+  });
+
+  it("falls back to a generic message for an unexpected confirm-banner error", async () => {
+    mockConfirmBanner.mockRejectedValue(new Error("boom"));
+    const result = await confirmBannerImageAction("shop-1", "https://x/banner.png");
+    expect(result.error).toBe("Couldn't save the image. Please try again.");
+  });
 });
 
 describe("requestAvatarUploadUrlAction / confirmAvatarImageAction", () => {
@@ -202,5 +273,29 @@ describe("requestAvatarUploadUrlAction / confirmAvatarImageAction", () => {
     const result = await confirmAvatarImageAction("shop-1", "https://x/avatar.png");
     expect(mockConfirmAvatar).toHaveBeenCalledWith("shop-1", "user-1", "https://x/avatar.png");
     expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error message for an invalid avatar image", async () => {
+    mockRequestAvatarUpload.mockRejectedValue(new InvalidImageError("Unsupported file type."));
+    const result = await requestAvatarUploadUrlAction("shop-1", "avatar.gif", "image/gif", 1000);
+    expect(result.error).toBe("Unsupported file type.");
+  });
+
+  it("falls back to a generic message for an unexpected avatar upload error", async () => {
+    mockRequestAvatarUpload.mockRejectedValue(new Error("boom"));
+    const result = await requestAvatarUploadUrlAction("shop-1", "avatar.png", "image/png", 1000);
+    expect(result.error).toBe("Couldn't start upload. Please try again.");
+  });
+
+  it("returns an error message when confirming an avatar as a non-owner", async () => {
+    mockConfirmAvatar.mockRejectedValue(new NotShopOwnerError());
+    const result = await confirmAvatarImageAction("shop-1", "https://x/avatar.png");
+    expect(result.error).toBe("You do not have permission to modify this shop.");
+  });
+
+  it("falls back to a generic message for an unexpected confirm-avatar error", async () => {
+    mockConfirmAvatar.mockRejectedValue(new Error("boom"));
+    const result = await confirmAvatarImageAction("shop-1", "https://x/avatar.png");
+    expect(result.error).toBe("Couldn't save the image. Please try again.");
   });
 });

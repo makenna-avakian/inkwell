@@ -1,0 +1,174 @@
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+
+vi.mock("next/navigation", () => ({
+  notFound: vi.fn(() => {
+    throw new Error("NEXT_NOT_FOUND");
+  }),
+}));
+vi.mock("@/server/discovery/service", () => ({
+  getShopPageData: vi.fn(),
+}));
+vi.mock("@/server/auth/config", () => ({ auth: vi.fn() }));
+
+import { notFound } from "next/navigation";
+import { getShopPageData } from "@/server/discovery/service";
+import { auth } from "@/server/auth/config";
+import PublicShopPage from "./PublicShopPage";
+
+const mockGetShopPageData = vi.mocked(getShopPageData);
+const mockAuth = vi.mocked(auth);
+const mockNotFound = vi.mocked(notFound);
+
+const BASE_SHOP = {
+  id: "shop-1",
+  displayName: "Jane's Studio",
+  bio: null,
+  bannerImageUrl: null,
+  avatarImageUrl: null,
+  socialLinks: [] as unknown,
+};
+
+function baseData(overrides: Partial<Parameters<typeof mockGetShopPageData.mockResolvedValue>[0]> = {}) {
+  return {
+    shop: BASE_SHOP,
+    portfolio: [],
+    publishedRules: null,
+    availableListings: [],
+    ...overrides,
+  } as never;
+}
+
+describe("PublicShopPage", () => {
+  it("calls notFound() when the shop doesn't exist", async () => {
+    mockGetShopPageData.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
+
+    await expect(PublicShopPage({ shopId: "missing" })).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mockNotFound).toHaveBeenCalled();
+  });
+
+  it("shows a 'no rules published' message when the shop has no published rules", async () => {
+    mockGetShopPageData.mockResolvedValue(baseData());
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("public-shop-page-no-rules")).toBeInTheDocument();
+  });
+
+  it("renders social links when present", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({ shop: { ...BASE_SHOP, socialLinks: [{ label: "Instagram", url: "https://instagram.com/x" }] } }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("public-shop-page-social-links")).toBeInTheDocument();
+    expect(screen.getByText("Instagram")).toBeInTheDocument();
+  });
+
+  it("prompts sign-in for a signed-out visitor when the slot is open", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        publishedRules: {
+          version: { tiers: [], addOns: [], rulesContent: [] } as never,
+          slotState: "open",
+          maxQueue: null,
+        },
+      }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByText(/to request a commission/)).toBeInTheDocument();
+  });
+
+  it("shows the commission request form for a signed-in visitor when the slot is open", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        publishedRules: {
+          version: { tiers: [], addOns: [], rulesContent: [] } as never,
+          slotState: "open",
+          maxQueue: null,
+        },
+      }),
+    );
+    mockAuth.mockResolvedValue({ user: { id: "buyer-1" } } as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("commission-request-form")).toBeInTheDocument();
+  });
+
+  it("shows the waitlist button for a signed-in visitor when the slot is waitlist", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        publishedRules: {
+          version: { tiers: [], addOns: [], rulesContent: [] } as never,
+          slotState: "waitlist",
+          maxQueue: null,
+        },
+      }),
+    );
+    mockAuth.mockResolvedValue({ user: { id: "buyer-1" } } as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("waitlist-join-button")).toBeInTheDocument();
+  });
+
+  it("shows a closed message when the slot is closed", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        publishedRules: {
+          version: { tiers: [], addOns: [], rulesContent: [] } as never,
+          slotState: "closed",
+          maxQueue: null,
+        },
+      }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("public-shop-page-closed")).toBeInTheDocument();
+  });
+
+  it("renders a Buy Now button per listing for a signed-in visitor", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000 }] as never,
+      }),
+    );
+    mockAuth.mockResolvedValue({ user: { id: "buyer-1" } } as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("buy-now-button-l1")).toBeInTheDocument();
+  });
+
+  it("prompts sign-in instead of Buy Now for a signed-out visitor", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000 }] as never,
+      }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.queryByTestId("buy-now-button-l1")).not.toBeInTheDocument();
+    expect(screen.getByText(/to buy now/)).toBeInTheDocument();
+  });
+});

@@ -66,5 +66,39 @@ describe.skipIf(!process.env.DATABASE_URL)("listings repository (integration)", 
     const first = await repo.addListingImageRow(listing.id, "https://x/1.png");
     const second = await repo.addListingImageRow(listing.id, "https://x/2.png");
     expect(second.position).toBeGreaterThan(first.position);
+
+    const images = await repo.listListingImages(listing.id);
+    expect(images.map((i) => i.id)).toEqual([first.id, second.id]);
+  });
+
+  it("finds a listing by id and with its shop owner joined", async () => {
+    const shop = await createTestShop("listings-find@example.com");
+    const listing = await repo.createListingRow({
+      shopId: shop.id,
+      title: "Piece",
+      priceCents: 1000,
+    });
+
+    expect((await repo.findListingById(listing.id))?.id).toBe(listing.id);
+
+    const withOwner = await repo.findListingWithShopOwner(listing.id);
+    expect(withOwner?.shopUserId).toBe(shop.userId);
+  });
+
+  it("updates a listing's fields", async () => {
+    const shop = await createTestShop("listings-update@example.com");
+    const listing = await repo.createListingRow({
+      shopId: shop.id,
+      title: "Original title",
+      priceCents: 1000,
+    });
+
+    const updated = await repo.updateListingRow(listing.id, {
+      title: "New title",
+      priceCents: 2000,
+    });
+
+    expect(updated.title).toBe("New title");
+    expect(updated.priceCents).toBe(2000);
   });
 });

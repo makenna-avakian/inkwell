@@ -16,12 +16,14 @@ describe.skipIf(!process.env.DATABASE_URL)("requests repository (integration)", 
   });
 
   afterEach(async () => {
+    // shopCommissionSettings.currentVersionId FKs to commissionRuleVersions —
+    // must be cleared first or the FK constraint blocks the version delete.
     await db.delete(schema.requestReadReceipts);
     await db.delete(schema.messages);
     await db.delete(schema.waitlistEntries);
     await db.delete(schema.commissionRequests);
-    await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.shopCommissionSettings);
+    await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.shopProfiles);
     await db.delete(schema.users);
   });
@@ -87,5 +89,120 @@ describe.skipIf(!process.env.DATABASE_URL)("requests repository (integration)", 
     await repo.setRequestStatusRow(req1.id, "accepted");
 
     expect(await repo.countActiveRequestsForShop(shop.id)).toBe(1);
+  });
+
+  it("finds a request by id and with its shop-owner participant joined", async () => {
+    const { seller, shop, version } = await createTestShopWithRules("find-owner@example.com");
+    const buyer = await authRepo.createUser({
+      email: "find-buyer@example.com",
+      displayName: "buyer",
+      passwordHash: null,
+    });
+    const request = await repo.createRequestRow({
+      shopId: shop.id,
+      buyerId: buyer.id,
+      ruleVersionId: version.id,
+      tierId: "t1",
+      description: "Piece",
+    });
+
+    expect((await repo.findRequestById(request.id))?.id).toBe(request.id);
+
+    const withParticipants = await repo.findRequestWithParticipants(request.id);
+    expect(withParticipants?.shopOwnerId).toBe(seller.id);
+  });
+
+  it("lists requests for a shop and for a buyer, oldest first", async () => {
+    const { shop, version } = await createTestShopWithRules("list-owner@example.com");
+    const buyer = await authRepo.createUser({
+      email: "list-buyer@example.com",
+      displayName: "buyer",
+      passwordHash: null,
+    });
+    await repo.createRequestRow({
+      shopId: shop.id,
+      buyerId: buyer.id,
+      ruleVersionId: version.id,
+      tierId: "t1",
+      description: "First",
+    });
+    await repo.createRequestRow({
+      shopId: shop.id,
+      buyerId: buyer.id,
+      ruleVersionId: version.id,
+      tierId: "t1",
+      description: "Second",
+    });
+
+    const forShop = await repo.listRequestsForShop(shop.id);
+    expect(forShop.map((r) => r.description)).toEqual(["First", "Second"]);
+
+    const forBuyer = await repo.listRequestsForBuyer(buyer.id);
+    expect(forBuyer).toHaveLength(2);
+  });
+
+  it("creates messages, lists them in order, and tracks the latest timestamp", async () => {
+    const { shop, version } = await createTestShopWithRules("message-owner@example.com");
+    const buyer = await authRepo.createUser({
+      email: "message-buyer@example.com",
+      displayName: "buyer",
+      passwordHash: null,
+    });
+    const request = await repo.createRequestRow({
+      shopId: shop.id,
+      buyerId: buyer.id,
+      ruleVersionId: version.id,
+      tierId: "t1",
+      description: "Piece",
+    });
+
+    await repo.createMessageRow(request.id, buyer.id, "Hi there", []);
+    const second = await repo.createMessageRow(request.id, buyer.id, "Following up", []);
+
+    const messages = await repo.listMessagesForRequest(request.id);
+    expect(messages).toHaveLength(2);
+    expect(await repo.getLatestMessageTimestamp(request.id)).toEqual(second.createdAt);
+  });
+
+  it("upserts a read receipt and reads it back", async () => {
+    const { shop, version } = await createTestShopWithRules("receipt-owner@example.com");
+    const buyer = await authRepo.createUser({
+      email: "receipt-buyer@example.com",
+      displayName: "buyer",
+      passwordHash: null,
+    });
+    const request = await repo.createRequestRow({
+      shopId: shop.id,
+      buyerId: buyer.id,
+      ruleVersionId: version.id,
+      tierId: "t1",
+      description: "Piece",
+    });
+
+    await repo.upsertReadReceipt(request.id, buyer.id);
+    const first = await repo.getReadReceipt(request.id, buyer.id);
+    await repo.upsertReadReceipt(request.id, buyer.id);
+    const second = await repo.getReadReceipt(request.id, buyer.id);
+
+    expect(second?.lastReadAt.getTime()).toBeGreaterThanOrEqual(first!.lastReadAt.getTime());
+  });
+
+  it("finds requests involving a user as either buyer or shop owner", async () => {
+    const { seller, shop, version } = await createTestShopWithRules("involved-owner@example.com");
+    const buyer = await authRepo.createUser({
+      email: "involved-buyer@example.com",
+      displayName: "buyer",
+      passwordHash: null,
+    });
+    await repo.createRequestRow({
+      shopId: shop.id,
+      buyerId: buyer.id,
+      ruleVersionId: version.id,
+      tierId: "t1",
+      description: "Piece",
+    });
+
+    expect(await repo.findRequestsInvolvingUser(buyer.id)).toHaveLength(1);
+    expect(await repo.findRequestsInvolvingUser(seller.id)).toHaveLength(1);
   });
 });

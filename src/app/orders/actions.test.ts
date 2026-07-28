@@ -22,13 +22,25 @@ import {
   cancelOrder,
   checkout,
   getCheckoutUrlForOrder,
+  getOrderHistoryForBuyer,
+  getOrderHistoryForSeller,
+  markInProgress,
+  onboardSellerAction,
+  requestRevision,
+  submitForReview,
 } from "@/server/orders/service";
 import {
   acceptAndCreateOrderAction,
   approveDeliveryAction,
   cancelOrderAction,
   checkoutAction,
+  getMyOrdersAsBuyerAction,
+  getMyOrdersAsSellerAction,
+  markInProgressAction,
+  onboardSellerActionAction,
   payOrderAction,
+  requestRevisionAction,
+  submitForReviewAction,
 } from "./actions";
 
 const mockAuth = vi.mocked(auth);
@@ -37,6 +49,12 @@ const mockCheckout = vi.mocked(checkout);
 const mockApproveDelivery = vi.mocked(approveDelivery);
 const mockCancelOrder = vi.mocked(cancelOrder);
 const mockGetCheckoutUrlForOrder = vi.mocked(getCheckoutUrlForOrder);
+const mockOnboardSellerAction = vi.mocked(onboardSellerAction);
+const mockMarkInProgress = vi.mocked(markInProgress);
+const mockSubmitForReview = vi.mocked(submitForReview);
+const mockRequestRevision = vi.mocked(requestRevision);
+const mockGetOrderHistoryForBuyer = vi.mocked(getOrderHistoryForBuyer);
+const mockGetOrderHistoryForSeller = vi.mocked(getOrderHistoryForSeller);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -108,5 +126,90 @@ describe("approveDeliveryAction / cancelOrderAction", () => {
     mockCancelOrder.mockRejectedValue(new Error("This order can no longer be cancelled."));
     const result = await cancelOrderAction("order-1");
     expect(result.formError).toBe("This order can no longer be cancelled.");
+  });
+
+  it("falls back to a generic message for a non-Error rejection", async () => {
+    mockCancelOrder.mockRejectedValue("nope");
+    const result = await cancelOrderAction("order-1");
+    expect(result.formError).toBe("Something went wrong. Please try again.");
+  });
+});
+
+describe("onboardSellerActionAction", () => {
+  it("returns the onboarding URL on success", async () => {
+    mockOnboardSellerAction.mockResolvedValue("https://connect.stripe.com/onboard");
+    const result = await onboardSellerActionAction("shop-1");
+    expect(mockOnboardSellerAction).toHaveBeenCalledWith("shop-1", "user-1");
+    expect(result.checkoutUrl).toBe("https://connect.stripe.com/onboard");
+    expect(result.success).toBe(true);
+  });
+
+  it("surfaces a rejection error", async () => {
+    mockOnboardSellerAction.mockRejectedValue(new Error("Shop not found."));
+    const result = await onboardSellerActionAction("shop-1");
+    expect(result.formError).toBe("Shop not found.");
+  });
+});
+
+describe("markInProgressAction", () => {
+  it("calls through with the signed-in caller", async () => {
+    const result = await markInProgressAction("order-1");
+    expect(mockMarkInProgress).toHaveBeenCalledWith("order-1", "user-1");
+    expect(result.success).toBe(true);
+  });
+
+  it("surfaces a rejection error", async () => {
+    mockMarkInProgress.mockRejectedValue(new Error("Invalid transition."));
+    const result = await markInProgressAction("order-1");
+    expect(result.formError).toBe("Invalid transition.");
+  });
+});
+
+describe("submitForReviewAction", () => {
+  it("calls through with the signed-in caller", async () => {
+    const result = await submitForReviewAction("order-1");
+    expect(mockSubmitForReview).toHaveBeenCalledWith("order-1", "user-1");
+    expect(result.success).toBe(true);
+  });
+
+  it("surfaces a rejection error", async () => {
+    mockSubmitForReview.mockRejectedValue(new Error("Invalid transition."));
+    const result = await submitForReviewAction("order-1");
+    expect(result.formError).toBe("Invalid transition.");
+  });
+});
+
+describe("requestRevisionAction", () => {
+  it("passes the feedback through", async () => {
+    const result = await requestRevisionAction("order-1", "Please add more detail");
+    expect(mockRequestRevision).toHaveBeenCalledWith("order-1", "user-1", "Please add more detail");
+    expect(result.success).toBe(true);
+  });
+
+  it("surfaces a rejection error", async () => {
+    mockRequestRevision.mockRejectedValue(new Error("Invalid transition."));
+    const result = await requestRevisionAction("order-1", "feedback");
+    expect(result.formError).toBe("Invalid transition.");
+  });
+});
+
+describe("getMyOrdersAsBuyerAction / getMyOrdersAsSellerAction", () => {
+  it("returns the buyer's order history for the signed-in user", async () => {
+    mockGetOrderHistoryForBuyer.mockResolvedValue([{ id: "order-1" }] as never);
+    const result = await getMyOrdersAsBuyerAction();
+    expect(mockGetOrderHistoryForBuyer).toHaveBeenCalledWith("user-1");
+    expect(result).toEqual([{ id: "order-1" }]);
+  });
+
+  it("returns the seller's order history for the signed-in user", async () => {
+    mockGetOrderHistoryForSeller.mockResolvedValue([{ id: "order-2" }] as never);
+    const result = await getMyOrdersAsSellerAction();
+    expect(mockGetOrderHistoryForSeller).toHaveBeenCalledWith("user-1");
+    expect(result).toEqual([{ id: "order-2" }]);
+  });
+
+  it("rejects when not signed in", async () => {
+    mockAuth.mockResolvedValue(null as never);
+    await expect(getMyOrdersAsBuyerAction()).rejects.toThrow("Not signed in.");
   });
 });
