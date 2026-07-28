@@ -59,6 +59,7 @@ async function assertOwner(shopId: string, callerId: string) {
 const socialLinkSchema = z.object({ label: z.string().min(1), url: z.string().url() });
 
 export const createShopSchema = z.object({
+  shopName: z.string().trim().min(1).max(80).optional(),
   bio: z.string().max(2000).optional(),
   socialLinks: z.array(socialLinkSchema).default([]),
 });
@@ -70,6 +71,7 @@ export async function createShop(userId: string, input: z.infer<typeof createSho
 
   return createShopProfile({
     userId,
+    shopName: parsed.shopName ?? null,
     bio: parsed.bio ?? null,
     socialLinks: parsed.socialLinks,
   });
@@ -82,6 +84,7 @@ export async function updateShop(
 ) {
   await assertOwner(shopId, callerId);
   return updateShopProfile(shopId, {
+    shopName: patch.shopName,
     bio: patch.bio,
     socialLinks: patch.socialLinks,
   });
@@ -114,6 +117,53 @@ export async function confirmPortfolioImage(
 
 export async function getShopPortfolio(shopId: string) {
   return listPortfolioImages(shopId);
+}
+
+/** Shared by banner/avatar upload — same presign/validate flow as portfolio images, one object per shop rather than an appendable list. */
+async function requestShopImageUploadUrl(
+  shopId: string,
+  callerId: string,
+  kind: "banner" | "avatar",
+  fileName: string,
+  contentType: string,
+  sizeBytes: number,
+) {
+  await assertOwner(shopId, callerId);
+  validateImageUpload(contentType, sizeBytes);
+
+  const extension = fileName.split(".").pop() ?? "bin";
+  const objectKeyPath = `shops/${shopId}/${kind}/${crypto.randomUUID()}.${extension}`;
+  return createPresignedUpload(objectKeyPath, contentType);
+}
+
+export async function requestBannerUploadUrl(
+  shopId: string,
+  callerId: string,
+  fileName: string,
+  contentType: string,
+  sizeBytes: number,
+) {
+  return requestShopImageUploadUrl(shopId, callerId, "banner", fileName, contentType, sizeBytes);
+}
+
+export async function confirmBannerImage(shopId: string, callerId: string, imageUrl: string) {
+  await assertOwner(shopId, callerId);
+  return updateShopProfile(shopId, { bannerImageUrl: imageUrl });
+}
+
+export async function requestAvatarUploadUrl(
+  shopId: string,
+  callerId: string,
+  fileName: string,
+  contentType: string,
+  sizeBytes: number,
+) {
+  return requestShopImageUploadUrl(shopId, callerId, "avatar", fileName, contentType, sizeBytes);
+}
+
+export async function confirmAvatarImage(shopId: string, callerId: string, imageUrl: string) {
+  await assertOwner(shopId, callerId);
+  return updateShopProfile(shopId, { avatarImageUrl: imageUrl });
 }
 
 const tierSchema = z.object({

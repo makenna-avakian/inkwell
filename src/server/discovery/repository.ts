@@ -37,7 +37,7 @@ export async function findAvailableListingCandidates(
       medium: listings.medium,
       styleTags: listings.styleTags,
       shopId: shopProfiles.id,
-      shopDisplayName: users.displayName,
+      shopDisplayName: sql<string>`coalesce(${shopProfiles.shopName}, ${users.displayName})`,
       shopSlotState: shopCommissionSettings.slotState,
     })
     .from(listings)
@@ -94,16 +94,16 @@ export async function searchShopsQuery(query: string): Promise<ShopSearchRow[]> 
   }>(sql`
     SELECT
       ${shopProfiles.id} AS shop_id,
-      ${users.displayName} AS display_name,
+      coalesce(${shopProfiles.shopName}, ${users.displayName}) AS display_name,
       ${shopProfiles.bio} AS bio,
       ${shopProfiles.avatarImageUrl} AS avatar_image_url,
       ts_rank(
-        to_tsvector('english', coalesce(${shopProfiles.bio}, '') || ' ' || coalesce(${users.displayName}, '')),
+        to_tsvector('english', coalesce(${shopProfiles.bio}, '') || ' ' || coalesce(${shopProfiles.shopName}, '') || ' ' || coalesce(${users.displayName}, '')),
         plainto_tsquery('english', ${query})
       ) AS rank
     FROM ${shopProfiles}
     INNER JOIN ${users} ON ${shopProfiles.userId} = ${users.id}
-    WHERE to_tsvector('english', coalesce(${shopProfiles.bio}, '') || ' ' || coalesce(${users.displayName}, ''))
+    WHERE to_tsvector('english', coalesce(${shopProfiles.bio}, '') || ' ' || coalesce(${shopProfiles.shopName}, '') || ' ' || coalesce(${users.displayName}, ''))
       @@ plainto_tsquery('english', ${query})
     ORDER BY rank DESC
   `);
@@ -121,7 +121,7 @@ export async function findShopProfileWithOwnerName(shopId: string) {
   const [row] = await db
     .select({
       id: shopProfiles.id,
-      displayName: users.displayName,
+      displayName: sql<string>`coalesce(${shopProfiles.shopName}, ${users.displayName})`,
       bio: shopProfiles.bio,
       bannerImageUrl: shopProfiles.bannerImageUrl,
       avatarImageUrl: shopProfiles.avatarImageUrl,

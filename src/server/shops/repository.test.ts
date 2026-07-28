@@ -18,8 +18,10 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
   });
 
   afterEach(async () => {
-    await db.delete(schema.commissionRuleVersions);
+    // shopCommissionSettings.currentVersionId FKs to commissionRuleVersions —
+    // must be cleared first or the FK constraint blocks the version delete.
     await db.delete(schema.shopCommissionSettings);
+    await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.portfolioImages);
     await db.delete(schema.shopProfiles);
     await db.delete(schema.users);
@@ -36,6 +38,24 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
     const settings = await repo.getShopCommissionSettings(shop.id);
     expect(settings?.slotState).toBe("closed");
     expect(settings?.currentVersionId).toBeNull();
+  });
+
+  it("updateShopProfile round-trips shopName, banner/avatar URLs, and social links", async () => {
+    const user = await createTestUser("branding@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+
+    const socialLinks = [{ label: "Instagram", url: "https://instagram.com/jane" }];
+    const updated = await repo.updateShopProfile(shop.id, {
+      shopName: "Jane's Studio",
+      bannerImageUrl: "https://media/banner.png",
+      avatarImageUrl: "https://media/avatar.png",
+      socialLinks,
+    });
+
+    expect(updated?.shopName).toBe("Jane's Studio");
+    expect(updated?.bannerImageUrl).toBe("https://media/banner.png");
+    expect(updated?.avatarImageUrl).toBe("https://media/avatar.png");
+    expect(updated?.socialLinks).toEqual(socialLinks);
   });
 
   it("assigns increasing positions to portfolio images", async () => {

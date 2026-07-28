@@ -8,6 +8,13 @@
       "when": 1785111236057,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785116093103,
+      "tag": "0001_shop_name",
+      "breakpoints": true
     }
   ]
 }

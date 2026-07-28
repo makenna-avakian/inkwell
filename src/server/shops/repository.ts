@@ -38,7 +38,9 @@ export async function createShopProfile(input: NewShopProfile) {
 
 export async function updateShopProfile(
   shopId: string,
-  patch: Partial<Pick<NewShopProfile, "bannerImageUrl" | "avatarImageUrl" | "bio" | "socialLinks">>,
+  patch: Partial<
+    Pick<NewShopProfile, "shopName" | "bannerImageUrl" | "avatarImageUrl" | "bio" | "socialLinks">
+  >,
 ) {
   const [shop] = await db
     .update(shopProfiles)

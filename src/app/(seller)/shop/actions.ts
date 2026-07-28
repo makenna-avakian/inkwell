@@ -5,8 +5,12 @@ import { auth } from "@/server/auth/config";
 import {
   NotShopOwnerError,
   ShopAlreadyExistsError,
+  confirmAvatarImage,
+  confirmBannerImage,
   confirmPortfolioImage,
   createShop,
+  requestAvatarUploadUrl,
+  requestBannerUploadUrl,
   requestPortfolioUploadUrl,
   updateShop,
 } from "@/server/shops/service";
@@ -25,7 +29,22 @@ async function requireSession() {
   return session.user.id;
 }
 
-const createShopFormSchema = z.object({
+const socialLinkSchema = z.object({ label: z.string().min(1), url: z.string().url() });
+const socialLinksFieldSchema = z.array(socialLinkSchema).default([]);
+
+/** The editor submits social links as a JSON string in a hidden field — malformed input falls back to an empty list rather than reaching the service layer raw. */
+function parseSocialLinks(raw: FormDataEntryValue | null) {
+  if (!raw) return [];
+  try {
+    const result = socialLinksFieldSchema.safeParse(JSON.parse(String(raw)));
+    return result.success ? result.data : [];
+  } catch {
+    return [];
+  }
+}
+
+const shopFormSchema = z.object({
+  shopName: z.string().trim().max(80).optional(),
   bio: z.string().max(2000).optional(),
 });
 
@@ -35,8 +54,10 @@ export async function createShopAction(
 ): Promise<ShopActionState> {
   try {
     const userId = await requireSession();
+    const shopName = String(formData.get("shopName") ?? "") || undefined;
     const bio = String(formData.get("bio") ?? "") || undefined;
-    await createShop(userId, { bio, socialLinks: [] });
+    const socialLinks = parseSocialLinks(formData.get("socialLinks"));
+    await createShop(userId, { shopName, bio, socialLinks });
   } catch (error) {
     if (error instanceof ShopAlreadyExistsError) {
       return { fieldErrors: {}, formError: error.message };
@@ -53,13 +74,24 @@ export async function updateShopAction(
 ): Promise<ShopActionState> {
   try {
     const userId = await requireSession();
-    const parsed = createShopFormSchema.safeParse({
+    const parsed = shopFormSchema.safeParse({
+      shopName: String(formData.get("shopName") ?? "") || undefined,
       bio: String(formData.get("bio") ?? "") || undefined,
     });
     if (!parsed.success) {
-      return { fieldErrors: { bio: parsed.error.issues[0]?.message ?? "Invalid" } };
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const field = issue.path[0];
+        if (typeof field === "string") fieldErrors[field] = issue.message;
+      }
+      return { fieldErrors };
     }
-    await updateShop(shopId, userId, { bio: parsed.data.bio });
+    const socialLinks = parseSocialLinks(formData.get("socialLinks"));
+    await updateShop(shopId, userId, {
+      shopName: parsed.data.shopName,
+      bio: parsed.data.bio,
+      socialLinks,
+    });
   } catch (error) {
     if (error instanceof NotShopOwnerError) {
       return { fieldErrors: {}, formError: error.message };
@@ -106,6 +138,86 @@ export async function confirmPortfolioImageAction(
   try {
     const userId = await requireSession();
     await confirmPortfolioImage(shopId, userId, imageUrl);
+    return {};
+  } catch (error) {
+    if (error instanceof NotShopOwnerError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't save the image. Please try again." };
+  }
+}
+
+export async function requestBannerUploadUrlAction(
+  shopId: string,
+  fileName: string,
+  contentType: string,
+  sizeBytes: number,
+): Promise<RequestUploadResult> {
+  try {
+    const userId = await requireSession();
+    const { uploadUrl, imageUrl } = await requestBannerUploadUrl(
+      shopId,
+      userId,
+      fileName,
+      contentType,
+      sizeBytes,
+    );
+    return { uploadUrl, imageUrl };
+  } catch (error) {
+    if (error instanceof InvalidImageError || error instanceof NotShopOwnerError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't start upload. Please try again." };
+  }
+}
+
+export async function confirmBannerImageAction(
+  shopId: string,
+  imageUrl: string,
+): Promise<{ error?: string }> {
+  try {
+    const userId = await requireSession();
+    await confirmBannerImage(shopId, userId, imageUrl);
+    return {};
+  } catch (error) {
+    if (error instanceof NotShopOwnerError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't save the image. Please try again." };
+  }
+}
+
+export async function requestAvatarUploadUrlAction(
+  shopId: string,
+  fileName: string,
+  contentType: string,
+  sizeBytes: number,
+): Promise<RequestUploadResult> {
+  try {
+    const userId = await requireSession();
+    const { uploadUrl, imageUrl } = await requestAvatarUploadUrl(
+      shopId,
+      userId,
+      fileName,
+      contentType,
+      sizeBytes,
+    );
+    return { uploadUrl, imageUrl };
+  } catch (error) {
+    if (error instanceof InvalidImageError || error instanceof NotShopOwnerError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't start upload. Please try again." };
+  }
+}
+
+export async function confirmAvatarImageAction(
+  shopId: string,
+  imageUrl: string,
+): Promise<{ error?: string }> {
+  try {
+    const userId = await requireSession();
+    await confirmAvatarImage(shopId, userId, imageUrl);
     return {};
   } catch (error) {
     if (error instanceof NotShopOwnerError) {

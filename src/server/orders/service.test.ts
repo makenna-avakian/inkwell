@@ -131,6 +131,7 @@ describe("acceptAndCreateOrder (BR-2 payouts gate, fee computation)", () => {
     mockFindShopById.mockResolvedValue({
       id: "shop-1",
       userId: "seller-1",
+      shopName: null,
       bannerImageUrl: null,
       avatarImageUrl: null,
       bio: null,
@@ -152,6 +153,7 @@ describe("acceptAndCreateOrder (BR-2 payouts gate, fee computation)", () => {
     mockFindShopById.mockResolvedValue({
       id: "shop-1",
       userId: "seller-1",
+      shopName: null,
       bannerImageUrl: null,
       avatarImageUrl: null,
       bio: null,
@@ -203,6 +205,7 @@ describe("getCheckoutUrlForOrder", () => {
     mockFindShopByUserId.mockResolvedValue({
       id: "shop-1",
       userId: "seller-1",
+      shopName: null,
       bannerImageUrl: null,
       avatarImageUrl: null,
       bio: null,

@@ -41,6 +41,22 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
       </div>
       {shop.bio && <p className="mt-4 max-w-2xl text-muted">{shop.bio}</p>}
 
+      {Array.isArray(shop.socialLinks) && shop.socialLinks.length > 0 && (
+        <div data-testid="public-shop-page-social-links" className="mt-4 flex flex-wrap gap-4">
+          {(shop.socialLinks as { label: string; url: string }[]).map((link) => (
+            <a
+              key={link.url}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium tracking-[0.1em] text-foreground uppercase underline underline-offset-4 transition-colors hover:text-accent"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
+
       <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
         Portfolio
       </h2>

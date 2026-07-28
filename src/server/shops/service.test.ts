@@ -31,24 +31,31 @@ import {
   getShopCommissionSettings,
   insertRuleVersion,
   setCurrentVersion,
+  updateShopProfile,
 } from "@/server/shops/repository";
 import { createPresignedUpload, validateImageUpload } from "@/server/shops/storage";
 import {
   NotShopOwnerError,
   RuleSetValidationError,
   ShopAlreadyExistsError,
+  confirmAvatarImage,
+  confirmBannerImage,
   confirmPortfolioImage,
   createShop,
   getPublishedRuleSet,
   isSeller,
   publishRuleSet,
+  requestAvatarUploadUrl,
+  requestBannerUploadUrl,
   requestPortfolioUploadUrl,
   setSlotState,
+  updateShop,
 } from "@/server/shops/service";
 
 const mockFindShopByUserId = vi.mocked(findShopByUserId);
 const mockFindShopById = vi.mocked(findShopById);
 const mockCreateShopProfile = vi.mocked(createShopProfile);
+const mockUpdateShopProfile = vi.mocked(updateShopProfile);
 const mockAddPortfolioImageRow = vi.mocked(addPortfolioImageRow);
 const mockGetExistingVersionNumbers = vi.mocked(getExistingVersionNumbers);
 const mockInsertRuleVersion = vi.mocked(insertRuleVersion);
@@ -61,6 +68,7 @@ const mockValidateImageUpload = vi.mocked(validateImageUpload);
 const SHOP = {
   id: "shop-1",
   userId: "user-1",
+  shopName: null,
   bannerImageUrl: null,
   avatarImageUrl: null,
   bio: null,
@@ -94,11 +102,82 @@ describe("createShop", () => {
     expect(mockCreateShopProfile).toHaveBeenCalled();
   });
 
+  it("passes shopName through to the repository", async () => {
+    mockFindShopByUserId.mockResolvedValue(undefined);
+    mockCreateShopProfile.mockResolvedValue({ ...SHOP, shopName: "Jane's Studio" });
+
+    await createShop("user-1", { shopName: "Jane's Studio", socialLinks: [] });
+    expect(mockCreateShopProfile).toHaveBeenCalledWith(
+      expect.objectContaining({ shopName: "Jane's Studio" }),
+    );
+  });
+
   it("rejects creating a second shop for the same user", async () => {
     mockFindShopByUserId.mockResolvedValue(SHOP);
     await expect(createShop("user-1", { socialLinks: [] })).rejects.toThrow(
       ShopAlreadyExistsError,
     );
+  });
+});
+
+describe("updateShop", () => {
+  it("rejects a non-owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    await expect(
+      updateShop("shop-1", "someone-else", { shopName: "New Name" }),
+    ).rejects.toThrow(NotShopOwnerError);
+    expect(mockUpdateShopProfile).not.toHaveBeenCalled();
+  });
+
+  it("forwards shopName/bio/socialLinks to the repository for the owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    const socialLinks = [{ label: "Instagram", url: "https://instagram.com/janedoe" }];
+
+    await updateShop("shop-1", "user-1", { shopName: "Jane's Studio", bio: "hi", socialLinks });
+
+    expect(mockUpdateShopProfile).toHaveBeenCalledWith("shop-1", {
+      shopName: "Jane's Studio",
+      bio: "hi",
+      socialLinks,
+    });
+  });
+});
+
+describe("requestBannerUploadUrl / confirmBannerImage", () => {
+  it("rejects a non-owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    await expect(
+      requestBannerUploadUrl("shop-1", "someone-else", "a.png", "image/png", 1000),
+    ).rejects.toThrow(NotShopOwnerError);
+  });
+
+  it("confirms the banner image only for the owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockUpdateShopProfile.mockResolvedValue({ ...SHOP, bannerImageUrl: "https://media/x.png" });
+
+    await confirmBannerImage("shop-1", "user-1", "https://media/x.png");
+    expect(mockUpdateShopProfile).toHaveBeenCalledWith("shop-1", {
+      bannerImageUrl: "https://media/x.png",
+    });
+  });
+});
+
+describe("requestAvatarUploadUrl / confirmAvatarImage", () => {
+  it("rejects a non-owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    await expect(
+      requestAvatarUploadUrl("shop-1", "someone-else", "a.png", "image/png", 1000),
+    ).rejects.toThrow(NotShopOwnerError);
+  });
+
+  it("confirms the avatar image only for the owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockUpdateShopProfile.mockResolvedValue({ ...SHOP, avatarImageUrl: "https://media/y.png" });
+
+    await confirmAvatarImage("shop-1", "user-1", "https://media/y.png");
+    expect(mockUpdateShopProfile).toHaveBeenCalledWith("shop-1", {
+      avatarImageUrl: "https://media/y.png",
+    });
   });
 });
 

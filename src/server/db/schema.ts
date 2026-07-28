@@ -72,6 +72,10 @@ export const shopProfiles = pgTable("shop_profiles", {
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: "cascade" }),
+  // Optional brand name distinct from the seller's account display name
+  // (e.g. "Jane's Watercolor Studio") — falls back to users.displayName
+  // wherever the shop is shown when unset.
+  shopName: text("shop_name"),
   bannerImageUrl: text("banner_image_url"),
   avatarImageUrl: text("avatar_image_url"),
   bio: text("bio"),

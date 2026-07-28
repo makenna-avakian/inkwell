@@ -1,0 +1,1 @@
+ALTER TABLE "shop_profiles" ADD COLUMN "shop_name" text;
