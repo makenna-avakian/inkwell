@@ -7,6 +7,11 @@ vi.mock("@/server/shops/repository", () => ({
   updateShopProfile: vi.fn(),
   addPortfolioImageRow: vi.fn(),
   listPortfolioImages: vi.fn(),
+  findPortfolioImageById: vi.fn(),
+  updatePortfolioImageRow: vi.fn(),
+  deletePortfolioImageRow: vi.fn(),
+  reorderPortfolioImagesRow: vi.fn(),
+  setFeaturedPortfolioImageRow: vi.fn(),
   getExistingVersionNumbers: vi.fn(),
   insertRuleVersion: vi.fn(),
   getRuleVersionById: vi.fn(),
@@ -21,34 +26,51 @@ vi.mock("@/server/shops/storage", () => ({
   validateImageUpload: vi.fn(),
 }));
 
+vi.mock("@/server/listings/repository", () => ({
+  findListingById: vi.fn(),
+}));
+
 import {
   addPortfolioImageRow,
   createShopProfile,
+  deletePortfolioImageRow,
+  findPortfolioImageById,
   findShopById,
   findShopByUserId,
   getExistingVersionNumbers,
   getRuleVersionById,
   getShopCommissionSettings,
   insertRuleVersion,
+  listPortfolioImages,
+  reorderPortfolioImagesRow,
   setCurrentVersion,
+  setFeaturedPortfolioImageRow,
+  updatePortfolioImageRow,
   updateShopProfile,
 } from "@/server/shops/repository";
 import { createPresignedUpload, validateImageUpload } from "@/server/shops/storage";
+import { findListingById } from "@/server/listings/repository";
 import {
+  NotPortfolioImageOwnerError,
   NotShopOwnerError,
+  PortfolioImageValidationError,
   RuleSetValidationError,
   ShopAlreadyExistsError,
   confirmAvatarImage,
   confirmBannerImage,
   confirmPortfolioImage,
   createShop,
+  deletePortfolioImage,
   getPublishedRuleSet,
   isSeller,
   publishRuleSet,
   requestAvatarUploadUrl,
   requestBannerUploadUrl,
   requestPortfolioUploadUrl,
+  reorderPortfolioImages,
+  setFeaturedPortfolioImage,
   setSlotState,
+  updatePortfolioImage,
   updateShop,
 } from "@/server/shops/service";
 
@@ -57,6 +79,12 @@ const mockFindShopById = vi.mocked(findShopById);
 const mockCreateShopProfile = vi.mocked(createShopProfile);
 const mockUpdateShopProfile = vi.mocked(updateShopProfile);
 const mockAddPortfolioImageRow = vi.mocked(addPortfolioImageRow);
+const mockListPortfolioImages = vi.mocked(listPortfolioImages);
+const mockFindPortfolioImageById = vi.mocked(findPortfolioImageById);
+const mockUpdatePortfolioImageRow = vi.mocked(updatePortfolioImageRow);
+const mockDeletePortfolioImageRow = vi.mocked(deletePortfolioImageRow);
+const mockReorderPortfolioImagesRow = vi.mocked(reorderPortfolioImagesRow);
+const mockSetFeaturedPortfolioImageRow = vi.mocked(setFeaturedPortfolioImageRow);
 const mockGetExistingVersionNumbers = vi.mocked(getExistingVersionNumbers);
 const mockInsertRuleVersion = vi.mocked(insertRuleVersion);
 const mockGetRuleVersionById = vi.mocked(getRuleVersionById);
@@ -64,6 +92,20 @@ const mockGetShopCommissionSettings = vi.mocked(getShopCommissionSettings);
 const mockSetCurrentVersion = vi.mocked(setCurrentVersion);
 const mockCreatePresignedUpload = vi.mocked(createPresignedUpload);
 const mockValidateImageUpload = vi.mocked(validateImageUpload);
+const mockFindListingById = vi.mocked(findListingById);
+
+const PORTFOLIO_IMAGE = {
+  id: "img-1",
+  shopId: "shop-1",
+  imageUrl: "https://media.inkwell.app/prod/x.png",
+  position: 1,
+  title: null,
+  caption: null,
+  tags: [],
+  listingId: null,
+  featured: false,
+  createdAt: new Date(),
+};
 
 const SHOP = {
   id: "shop-1",
@@ -203,21 +245,157 @@ describe("requestPortfolioUploadUrl / confirmPortfolioImage (BR-2, BR-7)", () =>
     expect(mockValidateImageUpload).toHaveBeenCalledWith("image/png", 1000);
   });
 
-  it("confirms a portfolio image only for the owner", async () => {
+  it("confirms a portfolio image only for the owner, with no metadata", async () => {
     mockFindShopById.mockResolvedValue(SHOP);
-    mockAddPortfolioImageRow.mockResolvedValue({
-      id: "img-1",
-      shopId: "shop-1",
-      imageUrl: "https://media.inkwell.app/prod/x.png",
-      position: 1,
-      createdAt: new Date(),
-    });
+    mockAddPortfolioImageRow.mockResolvedValue(PORTFOLIO_IMAGE);
 
     await confirmPortfolioImage("shop-1", "user-1", "https://media.inkwell.app/prod/x.png");
     expect(mockAddPortfolioImageRow).toHaveBeenCalledWith(
       "shop-1",
       "https://media.inkwell.app/prod/x.png",
+      { title: null, caption: null, tags: [], listingId: null },
     );
+  });
+
+  it("passes title/caption/tags through when provided", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockAddPortfolioImageRow.mockResolvedValue(PORTFOLIO_IMAGE);
+
+    await confirmPortfolioImage("shop-1", "user-1", "https://media.inkwell.app/prod/x.png", {
+      title: "Autumn Study",
+      caption: "Gouache on paper",
+      tags: ["watercolor", "landscape"],
+    });
+
+    expect(mockAddPortfolioImageRow).toHaveBeenCalledWith(
+      "shop-1",
+      "https://media.inkwell.app/prod/x.png",
+      { title: "Autumn Study", caption: "Gouache on paper", tags: ["watercolor", "landscape"], listingId: null },
+    );
+  });
+
+  it("rejects a listingId that doesn't belong to this shop", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindListingById.mockResolvedValue({
+      id: "listing-1",
+      shopId: "some-other-shop",
+      title: "Piece",
+      description: null,
+      priceCents: 1000,
+      status: "available",
+      medium: null,
+      styleTags: [],
+      createdAt: new Date(),
+    });
+
+    await expect(
+      confirmPortfolioImage("shop-1", "user-1", "https://media/x.png", { listingId: "listing-1" }),
+    ).rejects.toThrow(PortfolioImageValidationError);
+    expect(mockAddPortfolioImageRow).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid metadata (e.g. too many tags)", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+
+    await expect(
+      confirmPortfolioImage("shop-1", "user-1", "https://media/x.png", {
+        tags: Array.from({ length: 21 }, (_, i) => `tag-${i}`),
+      }),
+    ).rejects.toThrow(PortfolioImageValidationError);
+  });
+});
+
+describe("updatePortfolioImage", () => {
+  it("rejects an image belonging to another shop", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindPortfolioImageById.mockResolvedValue({ ...PORTFOLIO_IMAGE, shopId: "other-shop" });
+
+    await expect(
+      updatePortfolioImage("shop-1", "user-1", "img-1", { title: "New title" }),
+    ).rejects.toThrow(NotPortfolioImageOwnerError);
+    expect(mockUpdatePortfolioImageRow).not.toHaveBeenCalled();
+  });
+
+  it("updates title/caption/tags/listingId for the owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindPortfolioImageById.mockResolvedValue(PORTFOLIO_IMAGE);
+    mockUpdatePortfolioImageRow.mockResolvedValue({ ...PORTFOLIO_IMAGE, title: "Updated" });
+
+    await updatePortfolioImage("shop-1", "user-1", "img-1", { title: "Updated" });
+    expect(mockUpdatePortfolioImageRow).toHaveBeenCalledWith("img-1", "shop-1", {
+      title: "Updated",
+      caption: null,
+      tags: [],
+      listingId: null,
+    });
+  });
+});
+
+describe("deletePortfolioImage", () => {
+  it("rejects an image belonging to another shop", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindPortfolioImageById.mockResolvedValue({ ...PORTFOLIO_IMAGE, shopId: "other-shop" });
+
+    await expect(deletePortfolioImage("shop-1", "user-1", "img-1")).rejects.toThrow(
+      NotPortfolioImageOwnerError,
+    );
+    expect(mockDeletePortfolioImageRow).not.toHaveBeenCalled();
+  });
+
+  it("deletes for the owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindPortfolioImageById.mockResolvedValue(PORTFOLIO_IMAGE);
+
+    await deletePortfolioImage("shop-1", "user-1", "img-1");
+    expect(mockDeletePortfolioImageRow).toHaveBeenCalledWith("img-1", "shop-1");
+  });
+});
+
+describe("reorderPortfolioImages", () => {
+  it("rejects a non-owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    await expect(
+      reorderPortfolioImages("shop-1", "someone-else", ["img-1"]),
+    ).rejects.toThrow(NotShopOwnerError);
+  });
+
+  it("rejects an order that doesn't match this shop's actual image ids", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockListPortfolioImages.mockResolvedValue([PORTFOLIO_IMAGE]);
+
+    await expect(
+      reorderPortfolioImages("shop-1", "user-1", ["img-1", "img-from-another-shop"]),
+    ).rejects.toThrow(PortfolioImageValidationError);
+    expect(mockReorderPortfolioImagesRow).not.toHaveBeenCalled();
+  });
+
+  it("applies the reorder when the ids exactly match", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    const second = { ...PORTFOLIO_IMAGE, id: "img-2" };
+    mockListPortfolioImages.mockResolvedValue([PORTFOLIO_IMAGE, second]);
+
+    await reorderPortfolioImages("shop-1", "user-1", ["img-2", "img-1"]);
+    expect(mockReorderPortfolioImagesRow).toHaveBeenCalledWith("shop-1", ["img-2", "img-1"]);
+  });
+});
+
+describe("setFeaturedPortfolioImage", () => {
+  it("rejects an image belonging to another shop", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindPortfolioImageById.mockResolvedValue({ ...PORTFOLIO_IMAGE, shopId: "other-shop" });
+
+    await expect(setFeaturedPortfolioImage("shop-1", "user-1", "img-1")).rejects.toThrow(
+      NotPortfolioImageOwnerError,
+    );
+    expect(mockSetFeaturedPortfolioImageRow).not.toHaveBeenCalled();
+  });
+
+  it("sets the featured piece for the owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockFindPortfolioImageById.mockResolvedValue(PORTFOLIO_IMAGE);
+
+    await setFeaturedPortfolioImage("shop-1", "user-1", "img-1");
+    expect(mockSetFeaturedPortfolioImageRow).toHaveBeenCalledWith("shop-1", "img-1");
   });
 });
 

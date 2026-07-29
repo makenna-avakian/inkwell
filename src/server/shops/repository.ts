@@ -7,7 +7,9 @@ import {
   shopProfiles,
   type CommissionRuleVersion,
   type NewCommissionRuleVersion,
+  type NewPortfolioImage,
   type NewShopProfile,
+  type PortfolioImage,
   type ShopCommissionSettings,
   type ShopProfile,
 } from "@/server/db/schema";
@@ -50,7 +52,11 @@ export async function updateShopProfile(
   return shop;
 }
 
-export async function addPortfolioImageRow(shopId: string, imageUrl: string) {
+export async function addPortfolioImageRow(
+  shopId: string,
+  imageUrl: string,
+  metadata?: Pick<NewPortfolioImage, "title" | "caption" | "tags" | "listingId">,
+) {
   const [{ value: maxPosition }] = await db
     .select({ value: max(portfolioImages.position) })
     .from(portfolioImages)
@@ -58,7 +64,7 @@ export async function addPortfolioImageRow(shopId: string, imageUrl: string) {
 
   const [image] = await db
     .insert(portfolioImages)
-    .values({ shopId, imageUrl, position: (maxPosition ?? 0) + 1 })
+    .values({ shopId, imageUrl, position: (maxPosition ?? 0) + 1, ...metadata })
     .returning();
   return image;
 }
@@ -69,6 +75,66 @@ export async function listPortfolioImages(shopId: string) {
     .from(portfolioImages)
     .where(eq(portfolioImages.shopId, shopId))
     .orderBy(asc(portfolioImages.position));
+}
+
+export async function findPortfolioImageById(imageId: string): Promise<PortfolioImage | undefined> {
+  const [image] = await db
+    .select()
+    .from(portfolioImages)
+    .where(eq(portfolioImages.id, imageId))
+    .limit(1);
+  return image;
+}
+
+export async function updatePortfolioImageRow(
+  imageId: string,
+  shopId: string,
+  patch: Partial<Pick<NewPortfolioImage, "title" | "caption" | "tags" | "listingId">>,
+): Promise<PortfolioImage | undefined> {
+  const [image] = await db
+    .update(portfolioImages)
+    .set(patch)
+    .where(and(eq(portfolioImages.id, imageId), eq(portfolioImages.shopId, shopId)))
+    .returning();
+  return image;
+}
+
+export async function deletePortfolioImageRow(imageId: string, shopId: string): Promise<void> {
+  await db
+    .delete(portfolioImages)
+    .where(and(eq(portfolioImages.id, imageId), eq(portfolioImages.shopId, shopId)));
+}
+
+/** Applies a full reorder in one transaction — orderedImageIds must be exactly this shop's image ids. */
+export async function reorderPortfolioImagesRow(
+  shopId: string,
+  orderedImageIds: string[],
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    for (const [index, imageId] of orderedImageIds.entries()) {
+      await tx
+        .update(portfolioImages)
+        .set({ position: index + 1 })
+        .where(and(eq(portfolioImages.id, imageId), eq(portfolioImages.shopId, shopId)));
+    }
+  });
+}
+
+/** At most one featured piece per shop — unsets any previously-featured piece in the same transaction. */
+export async function setFeaturedPortfolioImageRow(
+  shopId: string,
+  imageId: string,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(portfolioImages)
+      .set({ featured: false })
+      .where(and(eq(portfolioImages.shopId, shopId), eq(portfolioImages.featured, true)));
+    await tx
+      .update(portfolioImages)
+      .set({ featured: true })
+      .where(and(eq(portfolioImages.id, imageId), eq(portfolioImages.shopId, shopId)));
+  });
 }
 
 export async function getExistingVersionNumbers(shopId: string): Promise<number[]> {

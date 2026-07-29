@@ -15,6 +15,13 @@
       "when": 1785116093103,
       "tag": "0001_shop_name",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785285895845,
+      "tag": "0002_portfolio_metadata",
+      "breakpoints": true
     }
   ]
 }

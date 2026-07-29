@@ -3,16 +3,23 @@
 import { z } from "zod";
 import { auth } from "@/server/auth/config";
 import {
+  NotPortfolioImageOwnerError,
   NotShopOwnerError,
+  PortfolioImageValidationError,
   ShopAlreadyExistsError,
   confirmAvatarImage,
   confirmBannerImage,
   confirmPortfolioImage,
   createShop,
+  deletePortfolioImage,
   requestAvatarUploadUrl,
   requestBannerUploadUrl,
   requestPortfolioUploadUrl,
+  reorderPortfolioImages,
+  setFeaturedPortfolioImage,
+  updatePortfolioImage,
   updateShop,
+  type PortfolioImageMetadataInput,
 } from "@/server/shops/service";
 import { InvalidImageError } from "@/server/shops/storage";
 
@@ -135,16 +142,82 @@ export async function requestPortfolioUploadUrlAction(
 export async function confirmPortfolioImageAction(
   shopId: string,
   imageUrl: string,
-): Promise<{ error?: string }> {
+  metadata?: Partial<PortfolioImageMetadataInput>,
+): Promise<{ error?: string; id?: string }> {
   try {
     const userId = await requireSession();
-    await confirmPortfolioImage(shopId, userId, imageUrl);
-    return {};
+    const image = await confirmPortfolioImage(shopId, userId, imageUrl, metadata);
+    return { id: image.id };
   } catch (error) {
-    if (error instanceof NotShopOwnerError) {
+    if (error instanceof NotShopOwnerError || error instanceof PortfolioImageValidationError) {
       return { error: error.message };
     }
     return { error: "Couldn't save the image. Please try again." };
+  }
+}
+
+export async function updatePortfolioImageAction(
+  shopId: string,
+  imageId: string,
+  metadata: Partial<PortfolioImageMetadataInput>,
+): Promise<{ error?: string }> {
+  try {
+    const userId = await requireSession();
+    await updatePortfolioImage(shopId, userId, imageId, metadata);
+    return {};
+  } catch (error) {
+    if (error instanceof NotPortfolioImageOwnerError || error instanceof PortfolioImageValidationError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't save the changes. Please try again." };
+  }
+}
+
+export async function deletePortfolioImageAction(
+  shopId: string,
+  imageId: string,
+): Promise<{ error?: string }> {
+  try {
+    const userId = await requireSession();
+    await deletePortfolioImage(shopId, userId, imageId);
+    return {};
+  } catch (error) {
+    if (error instanceof NotPortfolioImageOwnerError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't delete the piece. Please try again." };
+  }
+}
+
+export async function reorderPortfolioImagesAction(
+  shopId: string,
+  orderedImageIds: string[],
+): Promise<{ error?: string }> {
+  try {
+    const userId = await requireSession();
+    await reorderPortfolioImages(shopId, userId, orderedImageIds);
+    return {};
+  } catch (error) {
+    if (error instanceof NotShopOwnerError || error instanceof PortfolioImageValidationError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't save the new order. Please try again." };
+  }
+}
+
+export async function setFeaturedPortfolioImageAction(
+  shopId: string,
+  imageId: string,
+): Promise<{ error?: string }> {
+  try {
+    const userId = await requireSession();
+    await setFeaturedPortfolioImage(shopId, userId, imageId);
+    return {};
+  } catch (error) {
+    if (error instanceof NotPortfolioImageOwnerError) {
+      return { error: error.message };
+    }
+    return { error: "Couldn't feature this piece. Please try again." };
   }
 }
 

@@ -95,6 +95,18 @@ export const portfolioImages = pgTable("portfolio_images", {
     .references(() => shopProfiles.id, { onDelete: "cascade" }),
   imageUrl: text("image_url").notNull(),
   position: integer("position").notNull(),
+  title: text("title"),
+  caption: text("caption"),
+  // Array of strings, same convention as listings.styleTags.
+  tags: jsonb("tags").notNull().default([]),
+  // Optional link to one of this shop's listings — lets a portfolio piece
+  // that's also for sale point a visitor at checkout. Nulled out (not
+  // cascade-deleted) if the listing goes away, since the portfolio piece
+  // itself should survive its linked listing being removed.
+  listingId: uuid("listing_id").references(() => listings.id, { onDelete: "set null" }),
+  // At most one featured piece per shop — enforced in the repository layer
+  // (unsetting the previous featured piece in the same update), not the DB.
+  featured: boolean("featured").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -139,6 +151,7 @@ export const shopCommissionSettings = pgTable("shop_commission_settings", {
 export type ShopProfile = typeof shopProfiles.$inferSelect;
 export type NewShopProfile = typeof shopProfiles.$inferInsert;
 export type PortfolioImage = typeof portfolioImages.$inferSelect;
+export type NewPortfolioImage = typeof portfolioImages.$inferInsert;
 export type CommissionRuleVersion = typeof commissionRuleVersions.$inferSelect;
 export type NewCommissionRuleVersion = typeof commissionRuleVersions.$inferInsert;
 export type ShopCommissionSettings = typeof shopCommissionSettings.$inferSelect;

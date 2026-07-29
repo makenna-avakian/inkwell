@@ -6,6 +6,10 @@ vi.mock("@/server/shops/service", () => ({
   updateShop: vi.fn(),
   requestPortfolioUploadUrl: vi.fn(),
   confirmPortfolioImage: vi.fn(),
+  updatePortfolioImage: vi.fn(),
+  deletePortfolioImage: vi.fn(),
+  reorderPortfolioImages: vi.fn(),
+  setFeaturedPortfolioImage: vi.fn(),
   requestBannerUploadUrl: vi.fn(),
   confirmBannerImage: vi.fn(),
   requestAvatarUploadUrl: vi.fn(),
@@ -20,6 +24,12 @@ vi.mock("@/server/shops/service", () => ({
       super("You do not have permission to modify this shop.");
     }
   },
+  NotPortfolioImageOwnerError: class NotPortfolioImageOwnerError extends Error {
+    constructor() {
+      super("You do not have permission to modify this portfolio piece.");
+    }
+  },
+  PortfolioImageValidationError: class PortfolioImageValidationError extends Error {},
 }));
 vi.mock("@/server/shops/storage", () => ({
   InvalidImageError: class InvalidImageError extends Error {},
@@ -27,15 +37,21 @@ vi.mock("@/server/shops/storage", () => ({
 
 import { auth } from "@/server/auth/config";
 import {
+  NotPortfolioImageOwnerError,
   NotShopOwnerError,
+  PortfolioImageValidationError,
   ShopAlreadyExistsError,
   confirmAvatarImage,
   confirmBannerImage,
   confirmPortfolioImage,
   createShop,
+  deletePortfolioImage,
   requestAvatarUploadUrl,
   requestBannerUploadUrl,
   requestPortfolioUploadUrl,
+  reorderPortfolioImages,
+  setFeaturedPortfolioImage,
+  updatePortfolioImage,
   updateShop,
 } from "@/server/shops/service";
 import { InvalidImageError } from "@/server/shops/storage";
@@ -44,9 +60,13 @@ import {
   confirmBannerImageAction,
   confirmPortfolioImageAction,
   createShopAction,
+  deletePortfolioImageAction,
   requestAvatarUploadUrlAction,
   requestBannerUploadUrlAction,
   requestPortfolioUploadUrlAction,
+  reorderPortfolioImagesAction,
+  setFeaturedPortfolioImageAction,
+  updatePortfolioImageAction,
   updateShopAction,
 } from "./actions";
 
@@ -55,6 +75,10 @@ const mockCreateShop = vi.mocked(createShop);
 const mockUpdateShop = vi.mocked(updateShop);
 const mockRequestUpload = vi.mocked(requestPortfolioUploadUrl);
 const mockConfirmImage = vi.mocked(confirmPortfolioImage);
+const mockUpdatePortfolioImage = vi.mocked(updatePortfolioImage);
+const mockDeletePortfolioImage = vi.mocked(deletePortfolioImage);
+const mockReorderPortfolioImages = vi.mocked(reorderPortfolioImages);
+const mockSetFeaturedPortfolioImage = vi.mocked(setFeaturedPortfolioImage);
 const mockRequestBannerUpload = vi.mocked(requestBannerUploadUrl);
 const mockConfirmBanner = vi.mocked(confirmBannerImage);
 const mockRequestAvatarUpload = vi.mocked(requestAvatarUploadUrl);
@@ -198,9 +222,23 @@ describe("requestPortfolioUploadUrlAction", () => {
 });
 
 describe("confirmPortfolioImageAction", () => {
-  it("confirms the image", async () => {
-    const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png");
-    expect(mockConfirmImage).toHaveBeenCalledWith("shop-1", "user-1", "https://x/y.png");
+  it("confirms the image, forwarding metadata, and returns the new image's id", async () => {
+    mockConfirmImage.mockResolvedValue({
+      id: "img-1",
+      shopId: "shop-1",
+      imageUrl: "https://x/y.png",
+      position: 1,
+      title: "Piece",
+      caption: "hi",
+      tags: ["ink"],
+      listingId: null,
+      featured: false,
+      createdAt: new Date(),
+    });
+    const metadata = { title: "Piece", caption: "hi", tags: ["ink"] };
+    const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png", metadata);
+    expect(mockConfirmImage).toHaveBeenCalledWith("shop-1", "user-1", "https://x/y.png", metadata);
+    expect(result.id).toBe("img-1");
     expect(result.error).toBeUndefined();
   });
 
@@ -210,10 +248,100 @@ describe("confirmPortfolioImageAction", () => {
     expect(result.error).toBe("You do not have permission to modify this shop.");
   });
 
+  it("returns an error message for invalid metadata", async () => {
+    mockConfirmImage.mockRejectedValue(new PortfolioImageValidationError("Too many tags."));
+    const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png");
+    expect(result.error).toBe("Too many tags.");
+  });
+
   it("falls back to a generic message for an unexpected error", async () => {
     mockConfirmImage.mockRejectedValue(new Error("boom"));
     const result = await confirmPortfolioImageAction("shop-1", "https://x/y.png");
     expect(result.error).toBe("Couldn't save the image. Please try again.");
+  });
+});
+
+describe("updatePortfolioImageAction", () => {
+  it("updates the image for the signed-in caller", async () => {
+    const result = await updatePortfolioImageAction("shop-1", "img-1", { title: "New title" });
+    expect(mockUpdatePortfolioImage).toHaveBeenCalledWith("shop-1", "user-1", "img-1", {
+      title: "New title",
+    });
+    expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error message for a non-owner", async () => {
+    mockUpdatePortfolioImage.mockRejectedValue(new NotPortfolioImageOwnerError());
+    const result = await updatePortfolioImageAction("shop-1", "img-1", {});
+    expect(result.error).toBe("You do not have permission to modify this portfolio piece.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockUpdatePortfolioImage.mockRejectedValue(new Error("boom"));
+    const result = await updatePortfolioImageAction("shop-1", "img-1", {});
+    expect(result.error).toBe("Couldn't save the changes. Please try again.");
+  });
+});
+
+describe("deletePortfolioImageAction", () => {
+  it("deletes the image for the signed-in caller", async () => {
+    const result = await deletePortfolioImageAction("shop-1", "img-1");
+    expect(mockDeletePortfolioImage).toHaveBeenCalledWith("shop-1", "user-1", "img-1");
+    expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error message for a non-owner", async () => {
+    mockDeletePortfolioImage.mockRejectedValue(new NotPortfolioImageOwnerError());
+    const result = await deletePortfolioImageAction("shop-1", "img-1");
+    expect(result.error).toBe("You do not have permission to modify this portfolio piece.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockDeletePortfolioImage.mockRejectedValue(new Error("boom"));
+    const result = await deletePortfolioImageAction("shop-1", "img-1");
+    expect(result.error).toBe("Couldn't delete the piece. Please try again.");
+  });
+});
+
+describe("reorderPortfolioImagesAction", () => {
+  it("reorders for the signed-in caller", async () => {
+    const result = await reorderPortfolioImagesAction("shop-1", ["img-2", "img-1"]);
+    expect(mockReorderPortfolioImages).toHaveBeenCalledWith("shop-1", "user-1", ["img-2", "img-1"]);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error message for a mismatched order", async () => {
+    mockReorderPortfolioImages.mockRejectedValue(
+      new PortfolioImageValidationError("The provided order doesn't match this shop's portfolio."),
+    );
+    const result = await reorderPortfolioImagesAction("shop-1", ["img-1"]);
+    expect(result.error).toBe("The provided order doesn't match this shop's portfolio.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockReorderPortfolioImages.mockRejectedValue(new Error("boom"));
+    const result = await reorderPortfolioImagesAction("shop-1", ["img-1"]);
+    expect(result.error).toBe("Couldn't save the new order. Please try again.");
+  });
+});
+
+describe("setFeaturedPortfolioImageAction", () => {
+  it("features the image for the signed-in caller", async () => {
+    const result = await setFeaturedPortfolioImageAction("shop-1", "img-1");
+    expect(mockSetFeaturedPortfolioImage).toHaveBeenCalledWith("shop-1", "user-1", "img-1");
+    expect(result.error).toBeUndefined();
+  });
+
+  it("returns an error message for a non-owner", async () => {
+    mockSetFeaturedPortfolioImage.mockRejectedValue(new NotPortfolioImageOwnerError());
+    const result = await setFeaturedPortfolioImageAction("shop-1", "img-1");
+    expect(result.error).toBe("You do not have permission to modify this portfolio piece.");
+  });
+
+  it("falls back to a generic message for an unexpected error", async () => {
+    mockSetFeaturedPortfolioImage.mockRejectedValue(new Error("boom"));
+    const result = await setFeaturedPortfolioImageAction("shop-1", "img-1");
+    expect(result.error).toBe("Couldn't feature this piece. Please try again.");
   });
 });
 

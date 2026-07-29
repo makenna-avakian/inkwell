@@ -5,6 +5,8 @@ import { createPresignedUpload, validateImageUpload } from "@/server/shops/stora
 import {
   addPortfolioImageRow,
   createShopProfile,
+  deletePortfolioImageRow,
+  findPortfolioImageById,
   findShopById,
   findShopByUserId,
   getExistingVersionNumbers,
@@ -12,11 +14,15 @@ import {
   getShopCommissionSettings,
   insertRuleVersion,
   listPortfolioImages,
+  reorderPortfolioImagesRow,
   setCurrentVersion,
+  setFeaturedPortfolioImageRow,
   setMaxQueueRow,
   setSlotStateRow,
+  updatePortfolioImageRow,
   updateShopProfile,
 } from "@/server/shops/repository";
+import { findListingById } from "@/server/listings/repository";
 import type { CommissionRuleVersion, ShopCommissionSettings } from "@/server/db/schema";
 
 export class NotShopOwnerError extends Error {
@@ -37,6 +43,20 @@ export class RuleSetValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "RuleSetValidationError";
+  }
+}
+
+export class PortfolioImageValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PortfolioImageValidationError";
+  }
+}
+
+export class NotPortfolioImageOwnerError extends Error {
+  constructor() {
+    super("You do not have permission to modify this portfolio piece.");
+    this.name = "NotPortfolioImageOwnerError";
   }
 }
 
@@ -106,13 +126,112 @@ export async function requestPortfolioUploadUrl(
   return createPresignedUpload(objectKeyPath, contentType);
 }
 
+const portfolioImageMetadataSchema = z.object({
+  title: z.string().trim().max(120).optional(),
+  caption: z.string().trim().max(1000).optional(),
+  tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
+  listingId: z.string().uuid().nullable().optional(),
+});
+export type PortfolioImageMetadataInput = z.infer<typeof portfolioImageMetadataSchema>;
+
+/** BR: a linked listing must belong to the same shop — otherwise a portfolio piece could point at another seller's listing. */
+async function validateLinkedListing(shopId: string, listingId: string | null | undefined) {
+  if (!listingId) return;
+  const listing = await findListingById(listingId);
+  if (!listing || listing.shopId !== shopId) {
+    throw new PortfolioImageValidationError("That listing doesn't belong to this shop.");
+  }
+}
+
+async function assertPortfolioImageOwner(shopId: string, callerId: string, imageId: string) {
+  await assertOwner(shopId, callerId);
+  const image = await findPortfolioImageById(imageId);
+  if (!image || image.shopId !== shopId) {
+    throw new NotPortfolioImageOwnerError();
+  }
+  return image;
+}
+
 export async function confirmPortfolioImage(
   shopId: string,
   callerId: string,
   imageUrl: string,
+  rawMetadata?: unknown,
 ) {
   await assertOwner(shopId, callerId);
-  return addPortfolioImageRow(shopId, imageUrl);
+
+  let metadata: PortfolioImageMetadataInput;
+  try {
+    metadata = portfolioImageMetadataSchema.parse(rawMetadata ?? {});
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new PortfolioImageValidationError(error.issues[0]?.message ?? "Invalid portfolio piece.");
+    }
+    throw error;
+  }
+  await validateLinkedListing(shopId, metadata.listingId);
+
+  return addPortfolioImageRow(shopId, imageUrl, {
+    title: metadata.title || null,
+    caption: metadata.caption || null,
+    tags: metadata.tags,
+    listingId: metadata.listingId ?? null,
+  });
+}
+
+export async function updatePortfolioImage(
+  shopId: string,
+  callerId: string,
+  imageId: string,
+  rawMetadata: unknown,
+) {
+  await assertPortfolioImageOwner(shopId, callerId, imageId);
+
+  let metadata: PortfolioImageMetadataInput;
+  try {
+    metadata = portfolioImageMetadataSchema.parse(rawMetadata ?? {});
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new PortfolioImageValidationError(error.issues[0]?.message ?? "Invalid portfolio piece.");
+    }
+    throw error;
+  }
+  await validateLinkedListing(shopId, metadata.listingId);
+
+  return updatePortfolioImageRow(imageId, shopId, {
+    title: metadata.title || null,
+    caption: metadata.caption || null,
+    tags: metadata.tags,
+    listingId: metadata.listingId ?? null,
+  });
+}
+
+export async function deletePortfolioImage(shopId: string, callerId: string, imageId: string) {
+  await assertPortfolioImageOwner(shopId, callerId, imageId);
+  await deletePortfolioImageRow(imageId, shopId);
+}
+
+/** BR: orderedImageIds must be exactly this shop's current image ids — otherwise reordering could smuggle in/drop entries. */
+export async function reorderPortfolioImages(
+  shopId: string,
+  callerId: string,
+  orderedImageIds: string[],
+) {
+  await assertOwner(shopId, callerId);
+  const existing = await listPortfolioImages(shopId);
+  const existingIds = new Set(existing.map((image) => image.id));
+  const isExactSameSet =
+    orderedImageIds.length === existingIds.size &&
+    orderedImageIds.every((id) => existingIds.has(id));
+  if (!isExactSameSet) {
+    throw new PortfolioImageValidationError("The provided order doesn't match this shop's portfolio.");
+  }
+  await reorderPortfolioImagesRow(shopId, orderedImageIds);
+}
+
+export async function setFeaturedPortfolioImage(shopId: string, callerId: string, imageId: string) {
+  await assertPortfolioImageOwner(shopId, callerId, imageId);
+  await setFeaturedPortfolioImageRow(shopId, imageId);
 }
 
 export async function getShopPortfolio(shopId: string) {

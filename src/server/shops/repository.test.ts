@@ -23,6 +23,7 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
     await db.delete(schema.shopCommissionSettings);
     await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.portfolioImages);
+    await db.delete(schema.listings);
     await db.delete(schema.shopProfiles);
     await db.delete(schema.users);
   });
@@ -130,5 +131,93 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
 
     const withQueue = await repo.setMaxQueueRow(shop.id, 5);
     expect(withQueue.maxQueue).toBe(5);
+  });
+
+  it("stores title/caption/tags/listingId metadata on a portfolio image", async () => {
+    const user = await createTestUser("portfolio-meta@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const [listing] = await db
+      .insert(schema.listings)
+      .values({ shopId: shop.id, title: "Piece", priceCents: 2000 })
+      .returning();
+
+    const image = await repo.addPortfolioImageRow(shop.id, "https://x/1.png", {
+      title: "Autumn Study",
+      caption: "Gouache on paper",
+      tags: ["watercolor", "landscape"],
+      listingId: listing.id,
+    });
+
+    expect(image.title).toBe("Autumn Study");
+    expect(image.caption).toBe("Gouache on paper");
+    expect(image.tags).toEqual(["watercolor", "landscape"]);
+    expect(image.listingId).toBe(listing.id);
+    expect(image.featured).toBe(false);
+  });
+
+  it("finds a portfolio image by id", async () => {
+    const user = await createTestUser("portfolio-find@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const image = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+
+    expect((await repo.findPortfolioImageById(image.id))?.id).toBe(image.id);
+    expect(await repo.findPortfolioImageById("00000000-0000-0000-0000-000000000000")).toBeUndefined();
+  });
+
+  it("updates a portfolio image's metadata, scoped to its shop", async () => {
+    const user = await createTestUser("portfolio-update@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const otherUser = await createTestUser("portfolio-update-other@example.com");
+    const otherShop = await repo.createShopProfile({ userId: otherUser.id, socialLinks: [] });
+    const image = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+
+    const updated = await repo.updatePortfolioImageRow(image.id, shop.id, { title: "New title" });
+    expect(updated?.title).toBe("New title");
+
+    // Wrong shopId in the WHERE clause — no row matches, update is a no-op.
+    const noOp = await repo.updatePortfolioImageRow(image.id, otherShop.id, { title: "Hijacked" });
+    expect(noOp).toBeUndefined();
+    expect((await repo.findPortfolioImageById(image.id))?.title).toBe("New title");
+  });
+
+  it("deletes a portfolio image, scoped to its shop", async () => {
+    const user = await createTestUser("portfolio-delete@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const otherUser = await createTestUser("portfolio-delete-other@example.com");
+    const otherShop = await repo.createShopProfile({ userId: otherUser.id, socialLinks: [] });
+    const image = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+
+    // Wrong shopId — no row matches, nothing deleted.
+    await repo.deletePortfolioImageRow(image.id, otherShop.id);
+    expect(await repo.findPortfolioImageById(image.id)).toBeDefined();
+
+    await repo.deletePortfolioImageRow(image.id, shop.id);
+    expect(await repo.findPortfolioImageById(image.id)).toBeUndefined();
+  });
+
+  it("reorders portfolio images to match the given id order", async () => {
+    const user = await createTestUser("portfolio-reorder@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const first = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+    const second = await repo.addPortfolioImageRow(shop.id, "https://x/2.png");
+
+    await repo.reorderPortfolioImagesRow(shop.id, [second.id, first.id]);
+
+    const images = await repo.listPortfolioImages(shop.id);
+    expect(images.map((i) => i.id)).toEqual([second.id, first.id]);
+  });
+
+  it("features at most one portfolio image per shop at a time", async () => {
+    const user = await createTestUser("portfolio-feature@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const first = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+    const second = await repo.addPortfolioImageRow(shop.id, "https://x/2.png");
+
+    await repo.setFeaturedPortfolioImageRow(shop.id, first.id);
+    expect((await repo.findPortfolioImageById(first.id))?.featured).toBe(true);
+
+    await repo.setFeaturedPortfolioImageRow(shop.id, second.id);
+    expect((await repo.findPortfolioImageById(first.id))?.featured).toBe(false);
+    expect((await repo.findPortfolioImageById(second.id))?.featured).toBe(true);
   });
 });
