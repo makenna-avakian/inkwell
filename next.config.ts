@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
-    // Cloudflare R2 public custom domain (aidlc-docs/construction/shared-infrastructure.md).
+    // Cloudflare R2 public bucket URL (R2's own "Public Development URL").
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "media.inkwell.app",
+        hostname: "pub-a769e444011e4166bab4b3d4117f5e9e.r2.dev",
       },
     ],
   },
