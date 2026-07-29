@@ -146,7 +146,7 @@ describe("PublicShopPage", () => {
   it("renders a Buy Now button per listing for a signed-in visitor", async () => {
     mockGetShopPageData.mockResolvedValue(
       baseData({
-        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000 }] as never,
+        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000, styleTags: [] }] as never,
       }),
     );
     mockAuth.mockResolvedValue({ user: { id: "buyer-1" } } as never);
@@ -160,7 +160,7 @@ describe("PublicShopPage", () => {
   it("prompts sign-in instead of Buy Now for a signed-out visitor", async () => {
     mockGetShopPageData.mockResolvedValue(
       baseData({
-        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000 }] as never,
+        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000, styleTags: [] }] as never,
       }),
     );
     mockAuth.mockResolvedValue(null as never);
@@ -209,7 +209,7 @@ describe("PublicShopPage", () => {
   it("gives each available listing an anchor id so the portfolio lightbox can link to it", async () => {
     mockGetShopPageData.mockResolvedValue(
       baseData({
-        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000 }] as never,
+        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000, styleTags: [] }] as never,
       }),
     );
     mockAuth.mockResolvedValue(null as never);

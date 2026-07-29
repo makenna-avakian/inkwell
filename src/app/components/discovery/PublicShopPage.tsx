@@ -132,6 +132,7 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
               title={listing.title}
               priceCents={listing.priceCents}
               imageUrl={null}
+              styleTags={listing.styleTags as string[]}
               shopId={shop.id}
               shopDisplayName={shop.displayName}
               shopSlotState={publishedRules?.slotState ?? "closed"}

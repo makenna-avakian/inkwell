@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   findAvailableListingCandidates,
   findShopProfileWithOwnerName,
+  getCompletedOrderCountsByListingId,
   searchShopsQuery,
 } from "@/server/discovery/repository";
 import { matchesFeedFilters, paginate, type Page } from "@/server/discovery/filters";
@@ -16,6 +17,7 @@ export const browseFeedFiltersSchema = z.object({
   priceMinCents: z.number().int().nonnegative().optional(),
   priceMaxCents: z.number().int().nonnegative().optional(),
   commissionAvailableOnly: z.boolean().default(false),
+  sort: z.enum(["newest", "popular", "price-asc", "price-desc"]).default("newest"),
   page: z.number().int().positive().default(1),
 });
 
@@ -25,6 +27,8 @@ export async function browseFeed(rawFilters: unknown) {
   const filters = browseFeedFiltersSchema.parse(rawFilters ?? {});
 
   const candidates = await findAvailableListingCandidates(filters.medium);
+  const availableTags = Array.from(new Set(candidates.flatMap((c) => c.styleTags))).sort();
+
   const filtered = candidates.filter((item) =>
     matchesFeedFilters(item, {
       priceMinCents: filters.priceMinCents,
@@ -34,7 +38,35 @@ export async function browseFeed(rawFilters: unknown) {
     }),
   );
 
-  return paginate(filtered, filters.page);
+  const orderCounts = await getCompletedOrderCountsByListingId();
+  const withOrderCount = filtered.map((item) => ({
+    ...item,
+    orderCount: orderCounts[item.listingId] ?? 0,
+  }));
+
+  const sorted = sortFeedItems(withOrderCount, filters.sort);
+
+  return { ...paginate(sorted, filters.page), availableTags };
+}
+
+function sortFeedItems<T extends { priceCents: number; createdAt: Date; orderCount: number }>(
+  items: T[],
+  sort: BrowseFeedFilters["sort"],
+): T[] {
+  const copy = [...items];
+  switch (sort) {
+    case "price-asc":
+      return copy.sort((a, b) => a.priceCents - b.priceCents);
+    case "price-desc":
+      return copy.sort((a, b) => b.priceCents - a.priceCents);
+    case "popular":
+      return copy.sort(
+        (a, b) => b.orderCount - a.orderCount || b.createdAt.getTime() - a.createdAt.getTime(),
+      );
+    case "newest":
+    default:
+      return copy.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
 }
 
 export const searchQuerySchema = z.object({

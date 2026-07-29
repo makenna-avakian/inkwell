@@ -15,11 +15,24 @@ import BrowseFeed from "./BrowseFeed";
 
 const mockBrowseFeed = vi.mocked(browseFeed);
 
+const FILTERS = {
+  styleTags: [],
+  commissionAvailableOnly: false,
+  sort: "newest" as const,
+  page: 1,
+};
+
 describe("BrowseFeed", () => {
   it("shows an empty-state message when no listings match", async () => {
-    mockBrowseFeed.mockResolvedValue({ items: [], page: 1, pageSize: 24, totalCount: 0 });
+    mockBrowseFeed.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 24,
+      totalCount: 0,
+      availableTags: [],
+    });
 
-    const jsx = await BrowseFeed({ filters: { styleTags: [], commissionAvailableOnly: false, page: 1 } });
+    const jsx = await BrowseFeed({ filters: FILTERS });
     render(jsx);
 
     expect(screen.getByTestId("browse-feed-empty")).toBeInTheDocument();
@@ -38,16 +51,34 @@ describe("BrowseFeed", () => {
           shopId: "shop-1",
           shopDisplayName: "Makenna",
           shopSlotState: "open",
+          createdAt: new Date("2026-01-01T00:00:00Z"),
+          orderCount: 0,
         },
       ],
       page: 1,
       pageSize: 24,
       totalCount: 1,
+      availableTags: ["Watercolor"],
     });
 
-    const jsx = await BrowseFeed({ filters: { styleTags: [], commissionAvailableOnly: false, page: 1 } });
+    const jsx = await BrowseFeed({ filters: FILTERS });
     render(jsx);
 
     expect(screen.getByTestId("listing-card-l1")).toBeInTheDocument();
+  });
+
+  it("shows the total item count in the heading", async () => {
+    mockBrowseFeed.mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 24,
+      totalCount: 7,
+      availableTags: [],
+    });
+
+    const jsx = await BrowseFeed({ filters: FILTERS });
+    render(jsx);
+
+    expect(screen.getByText("7 pieces")).toBeInTheDocument();
   });
 });

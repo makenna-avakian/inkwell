@@ -6,6 +6,7 @@ describe.skipIf(!process.env.DATABASE_URL)("discovery repository (integration)",
   let authRepo: typeof import("@/server/auth/repository");
   let shopsRepo: typeof import("@/server/shops/repository");
   let listingsRepo: typeof import("@/server/listings/repository");
+  let ordersRepo: typeof import("@/server/orders/repository");
   let repo: typeof import("./repository");
 
   beforeEach(async () => {
@@ -14,10 +15,12 @@ describe.skipIf(!process.env.DATABASE_URL)("discovery repository (integration)",
     authRepo = await import("@/server/auth/repository");
     shopsRepo = await import("@/server/shops/repository");
     listingsRepo = await import("@/server/listings/repository");
+    ordersRepo = await import("@/server/orders/repository");
     repo = await import("./repository");
   });
 
   afterEach(async () => {
+    await db.delete(schema.orders);
     await db.delete(schema.listingImages);
     await db.delete(schema.listings);
     await db.delete(schema.shopCommissionSettings);
@@ -68,5 +71,44 @@ describe.skipIf(!process.env.DATABASE_URL)("discovery repository (integration)",
 
     const results = await repo.searchShopsQuery("pet portraits");
     expect(results.length).toBeGreaterThan(0);
+  });
+
+  it("counts only completed orders, grouped by listing", async () => {
+    const shop = await createTestShop("discovery-popularity@example.com");
+    const buyer = await authRepo.createUser({
+      email: "discovery-popularity-buyer@example.com",
+      displayName: "Buyer",
+      passwordHash: null,
+    });
+    const popular = await listingsRepo.createListingRow({
+      shopId: shop.id,
+      title: "Popular Piece",
+      priceCents: 1000,
+    });
+    const unpopular = await listingsRepo.createListingRow({
+      shopId: shop.id,
+      title: "Unpopular Piece",
+      priceCents: 1000,
+    });
+
+    async function makeOrder(listingId: string, status: "completed" | "cancelled") {
+      await ordersRepo.createOrderRow({
+        buyerId: buyer.id,
+        sellerId: shop.userId,
+        listingId,
+        subtotalCents: 1000,
+        platformFeeCents: 100,
+        sellerNetCents: 900,
+        status,
+      });
+    }
+    await makeOrder(popular.id, "completed");
+    await makeOrder(popular.id, "completed");
+    await makeOrder(popular.id, "cancelled"); // shouldn't count
+    await makeOrder(unpopular.id, "cancelled");
+
+    const counts = await repo.getCompletedOrderCountsByListingId();
+    expect(counts[popular.id]).toBe(2);
+    expect(counts[unpopular.id]).toBeUndefined();
   });
 });

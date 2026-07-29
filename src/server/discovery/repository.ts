@@ -1,8 +1,9 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import {
   listingImages,
   listings,
+  orders,
   shopCommissionSettings,
   shopProfiles,
   users,
@@ -18,6 +19,7 @@ export interface FeedCandidate {
   shopId: string;
   shopDisplayName: string;
   shopSlotState: "open" | "closed" | "waitlist";
+  createdAt: Date;
 }
 
 /**
@@ -39,6 +41,7 @@ export async function findAvailableListingCandidates(
       shopId: shopProfiles.id,
       shopDisplayName: sql<string>`coalesce(${shopProfiles.shopName}, ${users.displayName})`,
       shopSlotState: shopCommissionSettings.slotState,
+      createdAt: listings.createdAt,
     })
     .from(listings)
     .innerJoin(shopProfiles, eq(listings.shopId, shopProfiles.id))
@@ -68,6 +71,17 @@ export async function findAvailableListingCandidates(
   );
 
   return withImages;
+}
+
+/** "Popular" sort signal: how many completed orders each listing has (buy-now path only — commission orders have no listingId). */
+export async function getCompletedOrderCountsByListingId(): Promise<Record<string, number>> {
+  const rows = await db
+    .select({ listingId: orders.listingId, count: sql<number>`count(*)::int` })
+    .from(orders)
+    .where(and(eq(orders.status, "completed"), isNotNull(orders.listingId)))
+    .groupBy(orders.listingId);
+
+  return Object.fromEntries(rows.map((row) => [row.listingId as string, row.count]));
 }
 
 export interface ShopSearchRow {

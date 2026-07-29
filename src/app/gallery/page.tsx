@@ -12,9 +12,11 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
   // SECURITY-05: parsed/validated, malformed input falls back to defaults rather than reaching the query layer raw.
   const filters = browseFeedFiltersSchema.parse({
     medium: params.medium || undefined,
+    styleTags: params.tags ? params.tags.split(",").filter(Boolean) : undefined,
     priceMinCents: params.priceMin ? Math.round(Number(params.priceMin) * 100) : undefined,
     priceMaxCents: params.priceMax ? Math.round(Number(params.priceMax) * 100) : undefined,
     commissionAvailableOnly: params.commissionAvailableOnly === "true",
+    sort: params.sort,
     page: params.page ? Number(params.page) : 1,
   });
 
@@ -22,7 +24,6 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
     <>
       <Navbar />
       <main className="mx-auto max-w-6xl p-8 pt-32">
-        <h1 className="mb-8 text-center font-serif text-4xl font-medium tracking-tight text-foreground">Browse</h1>
         <BrowseFeed filters={filters} />
       </main>
     </>
