@@ -7,7 +7,11 @@ import OAuthButton from "./OAuthButton";
 
 const initialState: SignInFormState = {};
 
-export default function SignInForm() {
+interface SignInFormProps {
+  callbackUrl?: string;
+}
+
+export default function SignInForm({ callbackUrl = "/" }: SignInFormProps) {
   const [state, formAction, pending] = useActionState(signInAction, initialState);
 
   return (
@@ -17,6 +21,7 @@ export default function SignInForm() {
       {state.formError && <AuthErrorBanner message={state.formError} />}
 
       <form action={formAction} className="space-y-4" data-testid="sign-in-form">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <div>
           <label htmlFor="email" className="mb-1 block text-sm font-medium">
             Email
@@ -57,7 +62,7 @@ export default function SignInForm() {
 
       <div className="my-4 text-center text-xs tracking-[0.12em] text-muted uppercase">or</div>
 
-      <OAuthButton provider="google" />
+      <OAuthButton provider="google" callbackUrl={callbackUrl} />
     </div>
   );
 }

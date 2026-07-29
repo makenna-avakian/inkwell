@@ -3,6 +3,7 @@
 import { AuthError } from "next-auth";
 import { signIn } from "@/server/auth/config";
 import { RateLimitedError } from "@/server/auth/service";
+import { sanitizeCallbackUrl } from "@/server/auth/redirect";
 
 export interface SignInFormState {
   formError?: string;
@@ -15,9 +16,10 @@ export async function signInAction(
 ): Promise<SignInFormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const redirectTo = sanitizeCallbackUrl(formData.get("callbackUrl") as string | null);
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/" });
+    await signIn("credentials", { email, password, redirectTo });
   } catch (error) {
     if (error instanceof RateLimitedError) {
       return {

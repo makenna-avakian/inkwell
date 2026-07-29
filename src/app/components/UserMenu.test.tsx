@@ -15,7 +15,7 @@ describe("UserMenu", () => {
     expect(screen.queryByTestId("navbar-user-menu-dropdown")).not.toBeInTheDocument();
   });
 
-  it("opens to show Account and Sign out, but not My Shop, for a buyer", async () => {
+  it("opens to show Account, Sign out, and an Open a Shop link (not My Shop) for a buyer", async () => {
     const user = userEvent.setup();
     render(<UserMenu displayName="verify-test" isSeller={false} />);
 
@@ -25,15 +25,17 @@ describe("UserMenu", () => {
     expect(screen.getByTestId("navbar-user-menu-account-link")).toBeInTheDocument();
     expect(screen.getByTestId("navbar-user-menu-sign-out-button")).toBeInTheDocument();
     expect(screen.queryByTestId("navbar-user-menu-shop-link")).not.toBeInTheDocument();
+    expect(screen.getByTestId("navbar-user-menu-open-shop-link")).toHaveAttribute("href", "/shop/new");
   });
 
-  it("also shows My Shop for a seller", async () => {
+  it("shows My Shop instead of Open a Shop for a seller", async () => {
     const user = userEvent.setup();
     render(<UserMenu displayName="verify-test" isSeller={true} />);
 
     await user.click(screen.getByTestId("navbar-user-menu-button"));
 
     expect(screen.getByTestId("navbar-user-menu-shop-link")).toBeInTheDocument();
+    expect(screen.queryByTestId("navbar-user-menu-open-shop-link")).not.toBeInTheDocument();
   });
 
   it("closes when clicking outside the menu", async () => {

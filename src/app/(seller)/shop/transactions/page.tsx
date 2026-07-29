@@ -5,10 +5,11 @@ import { getShopStripeAccountId } from "@/server/orders/repository";
 import { hasPayoutsEnabled } from "@/server/orders/payment";
 import SellerTransactions from "@/app/components/orders/SellerTransactions";
 import StripeOnboardingButton from "@/app/components/orders/StripeOnboardingButton";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function ShopTransactionsPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/shop/transactions"));
 
   const shop = await findShopByUserId(session.user.id);
   if (!shop) redirect("/shop/new");

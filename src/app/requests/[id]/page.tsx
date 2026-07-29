@@ -2,16 +2,16 @@ import { redirect } from "next/navigation";
 import { auth } from "@/server/auth/config";
 import Navbar from "@/app/components/Navbar";
 import RequestDetail from "@/app/components/requests/RequestDetail";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function RequestDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-
   const { id } = await params;
+  const session = await auth();
+  if (!session?.user?.id) redirect(signInUrlWithCallback(`/requests/${id}`));
 
   return (
     <>

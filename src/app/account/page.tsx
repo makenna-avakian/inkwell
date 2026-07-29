@@ -4,13 +4,14 @@ import { findUserById } from "@/server/auth/repository";
 import Navbar from "@/app/components/Navbar";
 import DisplayNameForm from "@/app/components/account/DisplayNameForm";
 import ChangePasswordForm from "@/app/components/account/ChangePasswordForm";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function AccountPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/account"));
 
   const user = await findUserById(session.user.id);
-  if (!user) redirect("/sign-in");
+  if (!user) redirect(signInUrlWithCallback("/account"));
 
   return (
     <>

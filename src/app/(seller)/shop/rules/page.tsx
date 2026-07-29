@@ -4,10 +4,11 @@ import { findShopByUserId } from "@/server/shops/repository";
 import { getPublishedRuleSet } from "@/server/shops/service";
 import CommissionRulesEditor from "@/app/components/shops/CommissionRulesEditor";
 import SlotStateSelector from "@/app/components/shops/SlotStateSelector";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function ShopRulesPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/shop/rules"));
 
   const shop = await findShopByUserId(session.user.id);
   if (!shop) redirect("/shop/new");

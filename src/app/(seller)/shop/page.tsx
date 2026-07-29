@@ -15,10 +15,11 @@ import {
   requestBannerUploadUrlAction,
 } from "@/app/(seller)/shop/actions";
 import type { SocialLink } from "@/app/components/shops/SocialLinksEditor";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function ManageShopPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/shop"));
 
   const shop = await findShopByUserId(session.user.id);
   if (!shop) redirect("/shop/new");

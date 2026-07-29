@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import { auth } from "@/server/auth/config";
 import Navbar from "@/app/components/Navbar";
 import MyOrders from "@/app/components/orders/MyOrders";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function MyOrdersPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/orders"));
 
   return (
     <>

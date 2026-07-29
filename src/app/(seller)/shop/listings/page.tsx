@@ -3,10 +3,11 @@ import { auth } from "@/server/auth/config";
 import { findShopByUserId } from "@/server/shops/repository";
 import { listAvailableListingsForShop } from "@/server/listings/repository";
 import ListingManager from "@/app/components/listings/ListingManager";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function ListingsPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/shop/listings"));
 
   const shop = await findShopByUserId(session.user.id);
   if (!shop) redirect("/shop/new");

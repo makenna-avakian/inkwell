@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { signIn } from "@/server/auth/config";
 import { EmailAlreadyRegisteredError, signUp } from "@/server/auth/service";
+import { sanitizeCallbackUrl } from "@/server/auth/redirect";
 
 export interface SignUpFormState {
   fieldErrors: Partial<Record<"email" | "password" | "displayName", string>>;
@@ -16,6 +17,7 @@ export async function signUpAction(
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("displayName") ?? "") || undefined;
+  const redirectTo = sanitizeCallbackUrl(formData.get("callbackUrl") as string | null);
 
   try {
     await signUp({ email, password, displayName });
@@ -38,7 +40,7 @@ export async function signUpAction(
   }
 
   // Auto-sign-in after sign-up (business-logic-model.md).
-  await signIn("credentials", { email, password, redirectTo: "/" });
+  await signIn("credentials", { email, password, redirectTo });
 
   return { fieldErrors: {} };
 }

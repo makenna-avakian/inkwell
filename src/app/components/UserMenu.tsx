@@ -52,7 +52,7 @@ export default function UserMenu({ displayName, isSeller }: UserMenuProps) {
           >
             Account
           </Link>
-          {isSeller && (
+          {isSeller ? (
             <Link
               href="/shop"
               data-testid="navbar-user-menu-shop-link"
@@ -60,6 +60,15 @@ export default function UserMenu({ displayName, isSeller }: UserMenuProps) {
               className="block px-4 py-2 text-xs tracking-[0.1em] text-foreground uppercase transition-colors hover:text-accent"
             >
               My Shop
+            </Link>
+          ) : (
+            <Link
+              href="/shop/new"
+              data-testid="navbar-user-menu-open-shop-link"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-xs tracking-[0.1em] text-foreground uppercase transition-colors hover:text-accent"
+            >
+              Open a Shop
             </Link>
           )}
           <form action={signOutAction}>

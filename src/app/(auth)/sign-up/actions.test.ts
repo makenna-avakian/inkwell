@@ -49,7 +49,28 @@ describe("signUpAction", () => {
     expect(result.fieldErrors).toEqual({});
     expect(mockSignIn).toHaveBeenCalledWith(
       "credentials",
-      expect.objectContaining({ email: "a@example.com" }),
+      expect.objectContaining({ email: "a@example.com", redirectTo: "/" }),
+    );
+  });
+
+  it("redirects to a valid callbackUrl after auto-sign-in", async () => {
+    mockSignUp.mockResolvedValue({
+      id: "u1",
+      email: "a@example.com",
+      passwordHash: "x",
+      displayName: "a",
+      isAdmin: false,
+      createdAt: new Date(),
+    });
+
+    await signUpAction(
+      { fieldErrors: {} },
+      formData({ email: "a@example.com", password: "password123", callbackUrl: "/shop/new" }),
+    );
+
+    expect(mockSignIn).toHaveBeenCalledWith(
+      "credentials",
+      expect.objectContaining({ redirectTo: "/shop/new" }),
     );
   });
 

@@ -7,7 +7,11 @@ import OAuthButton from "./OAuthButton";
 
 const initialState: SignUpFormState = { fieldErrors: {} };
 
-export default function SignUpForm() {
+interface SignUpFormProps {
+  callbackUrl?: string;
+}
+
+export default function SignUpForm({ callbackUrl = "/" }: SignUpFormProps) {
   const [state, formAction, pending] = useActionState(signUpAction, initialState);
 
   return (
@@ -15,6 +19,7 @@ export default function SignUpForm() {
       {state.formError && <AuthErrorBanner message={state.formError} />}
 
       <form action={formAction} className="space-y-4" data-testid="sign-up-form">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <div>
           <label htmlFor="displayName" className="mb-1 block text-sm font-medium">
             Display name (optional)
@@ -75,7 +80,7 @@ export default function SignUpForm() {
 
       <div className="my-4 text-center text-xs tracking-[0.12em] text-muted uppercase">or</div>
 
-      <OAuthButton provider="google" />
+      <OAuthButton provider="google" callbackUrl={callbackUrl} />
     </div>
   );
 }

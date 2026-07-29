@@ -40,6 +40,13 @@ export default async function Navbar() {
           ) : (
             <>
               <Link
+                href="/sign-up?callbackUrl=%2Fshop%2Fnew"
+                data-testid="navbar-sell-link"
+                className="transition-colors hover:text-accent"
+              >
+                Sell on Inkwell
+              </Link>
+              <Link
                 href="/sign-in"
                 data-testid="navbar-sign-in-link"
                 className="transition-colors hover:text-accent"

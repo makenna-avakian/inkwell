@@ -46,8 +46,37 @@ describe("signInAction", () => {
     expect(result).toEqual({});
     expect(mockSignIn).toHaveBeenCalledWith(
       "credentials",
-      expect.objectContaining({ email: "a@example.com", password: "password123" }),
+      expect.objectContaining({ email: "a@example.com", password: "password123", redirectTo: "/" }),
     );
+  });
+
+  it("redirects to a valid callbackUrl after sign-in", async () => {
+    mockSignIn.mockResolvedValue(undefined as never);
+
+    await signInAction(
+      {},
+      formData({ email: "a@example.com", password: "password123", callbackUrl: "/shop/new" }),
+    );
+
+    expect(mockSignIn).toHaveBeenCalledWith(
+      "credentials",
+      expect.objectContaining({ redirectTo: "/shop/new" }),
+    );
+  });
+
+  it("sanitizes an unsafe callbackUrl instead of redirecting off-site (open-redirect protection)", async () => {
+    mockSignIn.mockResolvedValue(undefined as never);
+
+    await signInAction(
+      {},
+      formData({
+        email: "a@example.com",
+        password: "password123",
+        callbackUrl: "https://evil.example.com",
+      }),
+    );
+
+    expect(mockSignIn).toHaveBeenCalledWith("credentials", expect.objectContaining({ redirectTo: "/" }));
   });
 
   it("surfaces retryAfterSeconds when rate-limited", async () => {

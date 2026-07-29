@@ -2,16 +2,17 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/server/auth/config";
 import { getListing } from "@/server/listings/service";
 import ListingEditForm from "@/app/components/listings/ListingEditForm";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function ListingDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
-
   const { id } = await params;
+  const session = await auth();
+  if (!session?.user?.id) redirect(signInUrlWithCallback(`/shop/listings/${id}`));
+
   const listing = await getListing(id);
   if (!listing) notFound();
 

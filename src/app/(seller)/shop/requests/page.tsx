@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import { auth } from "@/server/auth/config";
 import { findShopByUserId } from "@/server/shops/repository";
 import RequestInbox from "@/app/components/requests/RequestInbox";
+import { signInUrlWithCallback } from "@/server/auth/redirect";
 
 export default async function ShopRequestsPage() {
   const session = await auth();
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect(signInUrlWithCallback("/shop/requests"));
 
   const shop = await findShopByUserId(session.user.id);
   if (!shop) redirect("/shop/new");
