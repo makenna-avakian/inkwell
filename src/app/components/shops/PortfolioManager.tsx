@@ -26,18 +26,20 @@ export default function PortfolioManager({ shopId, initialImages }: PortfolioMan
     setUploading(true);
     setError(undefined);
     try {
-      const { uploadUrl, imageUrl, error: requestError } =
+      const { uploadUrl, uploadFields, imageUrl, error: requestError } =
         await requestPortfolioUploadUrlAction(shopId, file.name, file.type, file.size);
-      if (requestError || !uploadUrl || !imageUrl) {
+      if (requestError || !uploadUrl || !uploadFields || !imageUrl) {
         setError(requestError ?? "Couldn't start upload.");
         return;
       }
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(uploadFields)) {
+        formData.set(key, value);
+      }
+      formData.set("file", file);
+
+      const uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
       if (!uploadResponse.ok) {
         setError("Upload failed. Please try again.");
         return;

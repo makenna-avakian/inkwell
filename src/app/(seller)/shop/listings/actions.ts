@@ -99,17 +99,17 @@ export async function requestListingUploadUrlAction(
   fileName: string,
   contentType: string,
   sizeBytes: number,
-): Promise<{ uploadUrl?: string; imageUrl?: string; error?: string }> {
+): Promise<{ uploadUrl?: string; uploadFields?: Record<string, string>; imageUrl?: string; error?: string }> {
   try {
     const userId = await requireSession();
-    const { uploadUrl, imageUrl } = await addListingImage(
+    const { uploadUrl, uploadFields, imageUrl } = await addListingImage(
       listingId,
       userId,
       fileName,
       contentType,
       sizeBytes,
     );
-    return { uploadUrl, imageUrl };
+    return { uploadUrl, uploadFields, imageUrl };
   } catch (error) {
     if (error instanceof Error) {
       return { error: error.message };

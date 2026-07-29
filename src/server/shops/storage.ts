@@ -1,5 +1,5 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client } from "@aws-sdk/client-s3";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
 const PRESIGN_EXPIRY_SECONDS = 5 * 60; // BR: short-lived (nfr-requirements.md)
 const CALL_TIMEOUT_MS = 5_000; // nfr-design-patterns.md Question 1: A
@@ -56,14 +56,21 @@ export function validateImageUpload(contentType: string, sizeBytes: number): voi
 
 export interface PresignedUpload {
   uploadUrl: string;
+  /** multipart/form-data fields the client must send alongside the file, in order, file last. */
+  uploadFields: Record<string, string>;
   imageUrl: string;
   objectKey: string;
 }
 
 /**
- * Generates a presigned PUT URL scoped to a single object key and content
- * type (NFR Requirements: Question 3: A / nfr-requirements.md's security note
- * — a leaked URL can't be reused for a different file or after expiry).
+ * Generates a presigned POST scoped to a single object key and content type,
+ * with a server-enforced content-length-range condition (a plain presigned
+ * PUT URL only signs the object key/content-type — R2/S3 never checks the
+ * body size against it, so a caller could request a URL for a declared 1KB
+ * file and then PUT gigabytes through it, since validateImageUpload only
+ * checks the caller-declared size, not the real upload). The POST policy's
+ * conditions are enforced by R2 itself at upload time, so an oversized or
+ * wrong-content-type upload is rejected before it's ever stored.
  */
 export async function createPresignedUpload(
   objectKeyPath: string,
@@ -73,18 +80,24 @@ export async function createPresignedUpload(
   const objectKey = `${environmentPrefix}/${objectKeyPath}`;
   const bucket = process.env.R2_BUCKET_NAME!;
 
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: objectKey,
-    ContentType: contentType,
-  });
-
-  const uploadUrl = await withOneRetry(() =>
-    getSignedUrl(client(), command, { expiresIn: PRESIGN_EXPIRY_SECONDS }),
+  const { url, fields } = await withOneRetry(() =>
+    createPresignedPost(client(), {
+      Bucket: bucket,
+      Key: objectKey,
+      Conditions: [
+        ["content-length-range", 1, MAX_FILE_SIZE_BYTES],
+        ["eq", "$Content-Type", contentType],
+      ],
+      Fields: {
+        "Content-Type": contentType,
+      },
+      Expires: PRESIGN_EXPIRY_SECONDS,
+    }),
   );
 
   return {
-    uploadUrl,
+    uploadUrl: url,
+    uploadFields: fields,
     imageUrl: `${process.env.R2_PUBLIC_URL}/${objectKey}`,
     objectKey,
   };

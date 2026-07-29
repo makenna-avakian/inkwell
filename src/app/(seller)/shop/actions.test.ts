@@ -159,6 +159,7 @@ describe("requestPortfolioUploadUrlAction", () => {
   it("returns upload/image URLs on success", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/x.png" },
       imageUrl: "https://media.inkwell.app/prod/x.png",
       objectKey: "prod/x.png",
     });
@@ -220,6 +221,7 @@ describe("requestBannerUploadUrlAction / confirmBannerImageAction", () => {
   it("returns upload/image URLs on success", async () => {
     mockRequestBannerUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/banner.png" },
       imageUrl: "https://media.inkwell.app/prod/banner.png",
       objectKey: "prod/banner.png",
     });
@@ -262,6 +264,7 @@ describe("requestAvatarUploadUrlAction / confirmAvatarImageAction", () => {
   it("returns upload/image URLs on success", async () => {
     mockRequestAvatarUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/avatar.png" },
       imageUrl: "https://media.inkwell.app/prod/avatar.png",
       objectKey: "prod/avatar.png",
     });

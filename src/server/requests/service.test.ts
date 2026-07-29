@@ -243,6 +243,7 @@ describe("requestReferenceImageUpload", () => {
   it("validates the image and delegates to Unit 2's presigned upload", async () => {
     mockCreatePresignedUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "shops/requests/x.png" },
       imageUrl: "https://media/x.png",
       objectKey: "shops/requests/x.png",
     });

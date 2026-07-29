@@ -143,6 +143,7 @@ describe("requestListingUploadUrlAction", () => {
   it("returns the upload URL and image URL on success", async () => {
     mockAddListingImage.mockResolvedValue({
       uploadUrl: "https://r2.example.com/put",
+      uploadFields: { key: "listings/listing-1/x.png" },
       imageUrl: "https://media.example.com/listing.png",
       objectKey: "listings/listing-1/x.png",
     });

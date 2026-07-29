@@ -194,6 +194,7 @@ describe("requestPortfolioUploadUrl / confirmPortfolioImage (BR-2, BR-7)", () =>
     mockFindShopById.mockResolvedValue(SHOP);
     mockCreatePresignedUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/shops/shop-1/x.png" },
       imageUrl: "https://media.inkwell.app/prod/shops/shop-1/x.png",
       objectKey: "prod/shops/shop-1/x.png",
     });

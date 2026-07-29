@@ -39,22 +39,24 @@ export default function ShopImageUploader({
     setUploading(true);
     setError(undefined);
     try {
-      const { uploadUrl, imageUrl: newImageUrl, error: requestError } = await requestUploadUrlAction(
-        shopId,
-        file.name,
-        file.type,
-        file.size,
-      );
-      if (requestError || !uploadUrl || !newImageUrl) {
+      const {
+        uploadUrl,
+        uploadFields,
+        imageUrl: newImageUrl,
+        error: requestError,
+      } = await requestUploadUrlAction(shopId, file.name, file.type, file.size);
+      if (requestError || !uploadUrl || !uploadFields || !newImageUrl) {
         setError(requestError ?? "Couldn't start upload.");
         return;
       }
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(uploadFields)) {
+        formData.set(key, value);
+      }
+      formData.set("file", file);
+
+      const uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
       if (!uploadResponse.ok) {
         setError("Upload failed. Please try again.");
         return;

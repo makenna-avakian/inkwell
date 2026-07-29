@@ -45,6 +45,7 @@ describe("PortfolioManager", () => {
   it("uploads a new image and appends it to the grid", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     mockConfirmImage.mockResolvedValue({});
@@ -80,6 +81,7 @@ describe("PortfolioManager", () => {
   it("shows an error when the PUT upload itself fails", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     global.fetch = vi.fn().mockResolvedValue({ ok: false });
@@ -99,6 +101,7 @@ describe("PortfolioManager", () => {
   it("shows an error when confirming the image fails", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     mockConfirmImage.mockResolvedValue({ error: "Couldn't save the image." });

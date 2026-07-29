@@ -21,6 +21,7 @@ describe("ShopImageUploader", () => {
   it("uploads a file and shows the new preview on success", async () => {
     const requestUploadUrlAction = vi.fn().mockResolvedValue({
       uploadUrl: "https://r2/upload",
+      uploadFields: { key: "prod/banner.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/banner.png",
     });
     const confirmImageAction = vi.fn().mockResolvedValue({});
