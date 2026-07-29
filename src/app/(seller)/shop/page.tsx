@@ -4,6 +4,7 @@ import { findShopByUserId } from "@/server/shops/repository";
 import { getShopPortfolio } from "@/server/shops/service";
 import { getShopStripeAccountId } from "@/server/orders/repository";
 import { hasPayoutsEnabled } from "@/server/orders/payment";
+import { listAvailableListingsForShop } from "@/server/listings/repository";
 import ShopProfileForm from "@/app/components/shops/ShopProfileForm";
 import PortfolioManager from "@/app/components/shops/PortfolioManager";
 import ShopImageUploader from "@/app/components/shops/ShopImageUploader";
@@ -24,8 +25,11 @@ export default async function ManageShopPage() {
   const shop = await findShopByUserId(session.user.id);
   if (!shop) redirect("/shop/new");
 
-  const images = await getShopPortfolio(shop.id);
-  const accountId = await getShopStripeAccountId(shop.id);
+  const [images, listings, accountId] = await Promise.all([
+    getShopPortfolio(shop.id),
+    listAvailableListingsForShop(shop.id),
+    getShopStripeAccountId(shop.id),
+  ]);
   const payoutsEnabled = await hasPayoutsEnabled(accountId);
 
   return (
@@ -74,7 +78,16 @@ export default async function ManageShopPage() {
       </h2>
       <PortfolioManager
         shopId={shop.id}
-        initialImages={images.map((i) => ({ id: i.id, imageUrl: i.imageUrl }))}
+        initialImages={images.map((i) => ({
+          id: i.id,
+          imageUrl: i.imageUrl,
+          title: i.title,
+          caption: i.caption,
+          tags: (i.tags as string[] | null) ?? [],
+          listingId: i.listingId,
+          featured: i.featured,
+        }))}
+        listingOptions={listings.map((l) => ({ id: l.id, title: l.title }))}
       />
     </main>
   );

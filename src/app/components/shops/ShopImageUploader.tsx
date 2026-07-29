@@ -56,7 +56,15 @@ export default function ShopImageUploader({
       }
       formData.set("file", file);
 
-      const uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
+      let uploadResponse: Response;
+      try {
+        uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
+      } catch {
+        // A network-level failure here (rather than a non-2xx response) usually
+        // means the storage bucket's CORS policy doesn't allow this origin.
+        setError("Upload failed — the storage service rejected the request. Please try again.");
+        return;
+      }
       if (!uploadResponse.ok) {
         setError("Upload failed. Please try again.");
         return;
@@ -69,6 +77,8 @@ export default function ShopImageUploader({
       }
 
       setImageUrl(newImageUrl);
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setUploading(false);
     }

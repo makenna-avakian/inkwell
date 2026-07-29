@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { redirect } from "next/navigation";
 import { auth } from "@/server/auth/config";
 import {
   NotPortfolioImageOwnerError,
@@ -71,7 +72,9 @@ export async function createShopAction(
     }
     return { fieldErrors: {}, formError: "Something went wrong. Please try again." };
   }
-  return { fieldErrors: {} };
+  // Outside the try/catch — redirect() throws internally, and that throw
+  // must propagate to Next.js rather than being caught as a generic error.
+  redirect("/shop");
 }
 
 export async function updateShopAction(

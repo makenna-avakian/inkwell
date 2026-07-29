@@ -171,4 +171,52 @@ describe("PublicShopPage", () => {
     expect(screen.queryByTestId("buy-now-button-l1")).not.toBeInTheDocument();
     expect(screen.getByText(/to buy now/)).toBeInTheDocument();
   });
+
+  it("shows the portfolio empty state when the shop has no pieces", async () => {
+    mockGetShopPageData.mockResolvedValue(baseData());
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("portfolio-gallery-empty")).toBeInTheDocument();
+  });
+
+  it("renders portfolio pieces as clickable thumbnails", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        portfolio: [
+          {
+            id: "img-1",
+            imageUrl: "https://media/1.png",
+            title: "Autumn Study",
+            caption: "Gouache",
+            tags: ["watercolor"],
+            listingId: null,
+            featured: true,
+          },
+        ] as never,
+      }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("portfolio-gallery-thumb-img-1")).toBeInTheDocument();
+  });
+
+  it("gives each available listing an anchor id so the portfolio lightbox can link to it", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        availableListings: [{ id: "l1", title: "Piece", priceCents: 1000 }] as never,
+      }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    const { container } = render(jsx);
+
+    expect(container.querySelector("#listing-l1")).toBeInTheDocument();
+  });
 });

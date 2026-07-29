@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(() => {
+    throw new Error("NEXT_REDIRECT");
+  }),
+}));
 vi.mock("@/server/auth/config", () => ({ auth: vi.fn() }));
 vi.mock("@/server/shops/service", () => ({
   createShop: vi.fn(),
@@ -35,6 +40,7 @@ vi.mock("@/server/shops/storage", () => ({
   InvalidImageError: class InvalidImageError extends Error {},
 }));
 
+import { redirect } from "next/navigation";
 import { auth } from "@/server/auth/config";
 import {
   NotPortfolioImageOwnerError,
@@ -70,6 +76,7 @@ import {
   updateShopAction,
 } from "./actions";
 
+const mockRedirect = vi.mocked(redirect);
 const mockAuth = vi.mocked(auth);
 const mockCreateShop = vi.mocked(createShop);
 const mockUpdateShop = vi.mocked(updateShop);
@@ -96,22 +103,26 @@ function formData(fields: Record<string, string>) {
 }
 
 describe("createShopAction", () => {
-  it("creates a shop for the signed-in user", async () => {
-    const result = await createShopAction({ fieldErrors: {} }, formData({ bio: "Hi" }));
+  it("creates a shop and redirects to /shop for the signed-in user", async () => {
+    await expect(
+      createShopAction({ fieldErrors: {} }, formData({ bio: "Hi" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
     expect(mockCreateShop).toHaveBeenCalledWith("user-1", {
       shopName: undefined,
       bio: "Hi",
       socialLinks: [],
     });
-    expect(result.formError).toBeUndefined();
+    expect(mockRedirect).toHaveBeenCalledWith("/shop");
   });
 
   it("passes shopName and parses socialLinks JSON", async () => {
     const socialLinks = [{ label: "Instagram", url: "https://instagram.com/janedoe" }];
-    await createShopAction(
-      { fieldErrors: {} },
-      formData({ shopName: "Jane's Studio", bio: "Hi", socialLinks: JSON.stringify(socialLinks) }),
-    );
+    await expect(
+      createShopAction(
+        { fieldErrors: {} },
+        formData({ shopName: "Jane's Studio", bio: "Hi", socialLinks: JSON.stringify(socialLinks) }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
     expect(mockCreateShop).toHaveBeenCalledWith("user-1", {
       shopName: "Jane's Studio",
       bio: "Hi",
@@ -120,7 +131,9 @@ describe("createShopAction", () => {
   });
 
   it("falls back to an empty list for malformed socialLinks JSON", async () => {
-    await createShopAction({ fieldErrors: {} }, formData({ socialLinks: "not json" }));
+    await expect(
+      createShopAction({ fieldErrors: {} }, formData({ socialLinks: "not json" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
     expect(mockCreateShop).toHaveBeenCalledWith(
       "user-1",
       expect.objectContaining({ socialLinks: [] }),

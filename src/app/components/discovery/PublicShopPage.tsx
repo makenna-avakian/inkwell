@@ -5,6 +5,7 @@ import { getShopPageData } from "@/server/discovery/service";
 import { auth } from "@/server/auth/config";
 import BlockRenderer from "./BlockRenderer";
 import ListingCard from "./ListingCard";
+import PortfolioGallery from "./PortfolioGallery";
 import type { ContentBlock } from "@/server/shops/blocks";
 import CommissionRequestForm from "@/app/components/requests/CommissionRequestForm";
 import WaitlistJoinButton from "@/app/components/requests/WaitlistJoinButton";
@@ -60,11 +61,18 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
       <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
         Portfolio
       </h2>
-      <div className="grid grid-cols-3 gap-4">
-        {portfolio.map((image) => (
-          <Image key={image.id} src={image.imageUrl} alt="" width={200} height={200} className="object-cover" />
-        ))}
-      </div>
+      <PortfolioGallery
+        images={portfolio.map((image) => ({
+          id: image.id,
+          imageUrl: image.imageUrl,
+          title: image.title,
+          caption: image.caption,
+          tags: (image.tags as string[] | null) ?? [],
+          listingId: image.listingId,
+          featured: image.featured,
+        }))}
+        availableListingIds={availableListings.map((listing) => listing.id)}
+      />
 
       <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
         Commission Rules
@@ -118,7 +126,7 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
       </h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {availableListings.map((listing) => (
-          <div key={listing.id}>
+          <div key={listing.id} id={`listing-${listing.id}`}>
             <ListingCard
               listingId={listing.id}
               title={listing.title}
