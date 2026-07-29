@@ -120,15 +120,15 @@ export async function requestReferenceUploadAction(
   fileName: string,
   contentType: string,
   sizeBytes: number,
-): Promise<{ uploadUrl?: string; uploadFields?: Record<string, string>; imageUrl?: string; error?: string }> {
+): Promise<{ uploadUrl?: string; imageUrl?: string; error?: string }> {
   try {
     await requireSession();
-    const { uploadUrl, uploadFields, imageUrl } = await requestReferenceImageUpload(
+    const { uploadUrl, imageUrl } = await requestReferenceImageUpload(
       fileName,
       contentType,
       sizeBytes,
     );
-    return { uploadUrl, uploadFields, imageUrl };
+    return { uploadUrl, imageUrl };
   } catch (error) {
     if (error instanceof Error) return { error: error.message };
     return { error: "Couldn't start upload. Please try again." };

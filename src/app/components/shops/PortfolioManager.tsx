@@ -61,22 +61,20 @@ export default function PortfolioManager({ shopId, initialImages, listingOptions
     setUploading(true);
     setError(undefined);
     try {
-      const { uploadUrl, uploadFields, imageUrl, error: requestError } =
+      const { uploadUrl, imageUrl, error: requestError } =
         await requestPortfolioUploadUrlAction(shopId, file.name, file.type, file.size);
-      if (requestError || !uploadUrl || !uploadFields || !imageUrl) {
+      if (requestError || !uploadUrl || !imageUrl) {
         setError(requestError ?? "Couldn't start upload.");
         return;
       }
 
-      const formData = new FormData();
-      for (const [key, value] of Object.entries(uploadFields)) {
-        formData.set(key, value);
-      }
-      formData.set("file", file);
-
       let uploadResponse: Response;
       try {
-        uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
+        uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
       } catch {
         // A network-level failure here (rather than a non-2xx response) usually
         // means the storage bucket's CORS policy doesn't allow this origin.

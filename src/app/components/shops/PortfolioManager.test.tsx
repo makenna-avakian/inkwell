@@ -93,7 +93,6 @@ describe("PortfolioManager", () => {
   it("uploads a new image and appends it to the grid", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
-      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     mockConfirmImage.mockResolvedValue({ id: "img-new" });
@@ -132,7 +131,6 @@ describe("PortfolioManager", () => {
   it("shows an error when the upload itself fails (non-2xx response)", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
-      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     global.fetch = vi.fn().mockResolvedValue({ ok: false });
@@ -152,7 +150,6 @@ describe("PortfolioManager", () => {
   it("shows a CORS-specific error when the upload request fails at the network level", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
-      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     global.fetch = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
@@ -171,7 +168,6 @@ describe("PortfolioManager", () => {
   it("shows an error when confirming the image fails", async () => {
     mockRequestUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
-      uploadFields: { key: "prod/piece.png", "Content-Type": "image/png" },
       imageUrl: "https://media.inkwell.app/prod/piece.png",
     });
     mockConfirmImage.mockResolvedValue({ error: "Couldn't save the image." });

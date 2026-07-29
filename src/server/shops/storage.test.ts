@@ -1,14 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockCreatePresignedPost = vi.fn();
-vi.mock("@aws-sdk/s3-presigned-post", () => ({
-  createPresignedPost: (...args: unknown[]) => mockCreatePresignedPost(...args),
+const mockGetSignedUrl = vi.fn();
+vi.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: (...args: unknown[]) => mockGetSignedUrl(...args),
 }));
+const mockSend = vi.fn();
 vi.mock("@aws-sdk/client-s3", () => ({
-  S3Client: vi.fn(),
+  S3Client: vi.fn().mockImplementation(() => ({ send: mockSend })),
+  PutObjectCommand: vi.fn((input: unknown) => ({ command: "Put", input })),
+  HeadObjectCommand: vi.fn((input: unknown) => ({ command: "Head", input })),
+  DeleteObjectCommand: vi.fn((input: unknown) => ({ command: "Delete", input })),
 }));
 
-import { createPresignedUpload, InvalidImageError, validateImageUpload } from "@/server/shops/storage";
+import {
+  createPresignedUpload,
+  InvalidImageError,
+  validateImageUpload,
+  verifyUploadedImageSize,
+} from "@/server/shops/storage";
 
 const ORIGINAL_ENV = process.env;
 
@@ -46,55 +55,94 @@ describe("validateImageUpload (BR-7)", () => {
 });
 
 describe("createPresignedUpload", () => {
-  it("returns a presigned POST URL/fields and a public image URL scoped by the environment prefix", async () => {
-    mockCreatePresignedPost.mockResolvedValue({
-      url: "https://r2.example.com/inkwell-media",
-      fields: { key: "test/shops/shop-1/x.png", "Content-Type": "image/png" },
-    });
+  it("returns a presigned PUT URL and a public image URL scoped by the environment prefix", async () => {
+    mockGetSignedUrl.mockResolvedValue("https://r2.example.com/inkwell-media/test/shops/shop-1/x.png");
 
     const result = await createPresignedUpload("shops/shop-1/x.png", "image/png");
 
     expect(result.objectKey).toBe("test/shops/shop-1/x.png");
     expect(result.imageUrl).toBe("https://media.inkwell.app/test/shops/shop-1/x.png");
-    expect(result.uploadUrl).toBe("https://r2.example.com/inkwell-media");
-    expect(result.uploadFields).toEqual({ key: "test/shops/shop-1/x.png", "Content-Type": "image/png" });
+    expect(result.uploadUrl).toBe("https://r2.example.com/inkwell-media/test/shops/shop-1/x.png");
   });
 
-  it("enforces a server-side content-length-range condition so an oversized upload is rejected by R2, not just at request time", async () => {
-    mockCreatePresignedPost.mockResolvedValue({
-      url: "https://r2.example.com/inkwell-media",
-      fields: {},
-    });
+  it("signs a PUT for the declared bucket, key, and content type (R2 doesn't support presigned POST)", async () => {
+    mockGetSignedUrl.mockResolvedValue("https://r2.example.com/inkwell-media");
 
     await createPresignedUpload("shops/shop-1/x.png", "image/png");
 
-    const [, options] = mockCreatePresignedPost.mock.calls[0];
-    expect(options.Conditions).toEqual(
-      expect.arrayContaining([
-        ["content-length-range", 1, 5 * 1024 * 1024],
-        ["eq", "$Content-Type", "image/png"],
-      ]),
-    );
+    const [, command] = mockGetSignedUrl.mock.calls[0];
+    expect(command.input).toEqual({
+      Bucket: "inkwell-media",
+      Key: "test/shops/shop-1/x.png",
+      ContentType: "image/png",
+    });
   });
 
   it("retries once on failure before giving up", async () => {
-    mockCreatePresignedPost
+    mockGetSignedUrl
       .mockRejectedValueOnce(new Error("transient network error"))
-      .mockResolvedValueOnce({ url: "https://r2.example.com/inkwell-media", fields: {} });
+      .mockResolvedValueOnce("https://r2.example.com/inkwell-media");
 
     const result = await createPresignedUpload("shops/shop-1/x.png", "image/png");
 
-    expect(mockCreatePresignedPost).toHaveBeenCalledTimes(2);
+    expect(mockGetSignedUrl).toHaveBeenCalledTimes(2);
     expect(result.uploadUrl).toBe("https://r2.example.com/inkwell-media");
   });
 
   it("throws the original error when the retry also fails", async () => {
-    mockCreatePresignedPost
+    mockGetSignedUrl
       .mockRejectedValueOnce(new Error("first failure"))
       .mockRejectedValueOnce(new Error("second failure"));
 
     await expect(createPresignedUpload("shops/shop-1/x.png", "image/png")).rejects.toThrow(
       "first failure",
     );
+  });
+});
+
+describe("verifyUploadedImageSize (BR-7 compensating control for presigned PUT)", () => {
+  it("accepts an object at or under the size limit", async () => {
+    mockSend.mockResolvedValueOnce({ ContentLength: 1024 });
+
+    await expect(
+      verifyUploadedImageSize("https://media.inkwell.app/test/shops/shop-1/x.png"),
+    ).resolves.toBeUndefined();
+
+    const [headCall] = mockSend.mock.calls[0];
+    expect(headCall).toEqual({
+      command: "Head",
+      input: { Bucket: "inkwell-media", Key: "test/shops/shop-1/x.png" },
+    });
+  });
+
+  it("deletes the object and rejects when it's over the 5MB limit", async () => {
+    mockSend
+      .mockResolvedValueOnce({ ContentLength: 6 * 1024 * 1024 })
+      .mockResolvedValueOnce({});
+
+    await expect(
+      verifyUploadedImageSize("https://media.inkwell.app/test/shops/shop-1/x.png"),
+    ).rejects.toThrow(InvalidImageError);
+
+    const [deleteCall] = mockSend.mock.calls[1];
+    expect(deleteCall).toEqual({
+      command: "Delete",
+      input: { Bucket: "inkwell-media", Key: "test/shops/shop-1/x.png" },
+    });
+  });
+
+  it("rejects when the object's size can't be determined", async () => {
+    mockSend.mockResolvedValueOnce({ ContentLength: undefined }).mockResolvedValueOnce({});
+
+    await expect(
+      verifyUploadedImageSize("https://media.inkwell.app/test/shops/shop-1/x.png"),
+    ).rejects.toThrow(InvalidImageError);
+  });
+
+  it("rejects a URL that isn't under this bucket's public URL", async () => {
+    await expect(verifyUploadedImageSize("https://evil.example.com/x.png")).rejects.toThrow(
+      InvalidImageError,
+    );
+    expect(mockSend).not.toHaveBeenCalled();
   });
 });

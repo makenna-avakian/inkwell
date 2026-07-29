@@ -24,6 +24,8 @@ vi.mock("@/server/shops/repository", () => ({
 vi.mock("@/server/shops/storage", () => ({
   createPresignedUpload: vi.fn(),
   validateImageUpload: vi.fn(),
+  verifyUploadedImageSize: vi.fn(),
+  InvalidImageError: class InvalidImageError extends Error {},
 }));
 
 vi.mock("@/server/listings/repository", () => ({
@@ -48,7 +50,12 @@ import {
   updatePortfolioImageRow,
   updateShopProfile,
 } from "@/server/shops/repository";
-import { createPresignedUpload, validateImageUpload } from "@/server/shops/storage";
+import {
+  createPresignedUpload,
+  InvalidImageError,
+  validateImageUpload,
+  verifyUploadedImageSize,
+} from "@/server/shops/storage";
 import { findListingById } from "@/server/listings/repository";
 import {
   NotPortfolioImageOwnerError,
@@ -92,6 +99,7 @@ const mockGetShopCommissionSettings = vi.mocked(getShopCommissionSettings);
 const mockSetCurrentVersion = vi.mocked(setCurrentVersion);
 const mockCreatePresignedUpload = vi.mocked(createPresignedUpload);
 const mockValidateImageUpload = vi.mocked(validateImageUpload);
+const mockVerifyUploadedImageSize = vi.mocked(verifyUploadedImageSize);
 const mockFindListingById = vi.mocked(findListingById);
 
 const PORTFOLIO_IMAGE = {
@@ -198,9 +206,20 @@ describe("requestBannerUploadUrl / confirmBannerImage", () => {
     mockUpdateShopProfile.mockResolvedValue({ ...SHOP, bannerImageUrl: "https://media/x.png" });
 
     await confirmBannerImage("shop-1", "user-1", "https://media/x.png");
+    expect(mockVerifyUploadedImageSize).toHaveBeenCalledWith("https://media/x.png");
     expect(mockUpdateShopProfile).toHaveBeenCalledWith("shop-1", {
       bannerImageUrl: "https://media/x.png",
     });
+  });
+
+  it("rejects an oversized upload caught by the post-upload size check (BR-7)", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockVerifyUploadedImageSize.mockRejectedValueOnce(new InvalidImageError("Image must be under 5MB."));
+
+    await expect(confirmBannerImage("shop-1", "user-1", "https://media/x.png")).rejects.toThrow(
+      InvalidImageError,
+    );
+    expect(mockUpdateShopProfile).not.toHaveBeenCalled();
   });
 });
 
@@ -217,6 +236,7 @@ describe("requestAvatarUploadUrl / confirmAvatarImage", () => {
     mockUpdateShopProfile.mockResolvedValue({ ...SHOP, avatarImageUrl: "https://media/y.png" });
 
     await confirmAvatarImage("shop-1", "user-1", "https://media/y.png");
+    expect(mockVerifyUploadedImageSize).toHaveBeenCalledWith("https://media/y.png");
     expect(mockUpdateShopProfile).toHaveBeenCalledWith("shop-1", {
       avatarImageUrl: "https://media/y.png",
     });
@@ -236,7 +256,6 @@ describe("requestPortfolioUploadUrl / confirmPortfolioImage (BR-2, BR-7)", () =>
     mockFindShopById.mockResolvedValue(SHOP);
     mockCreatePresignedUpload.mockResolvedValue({
       uploadUrl: "https://r2/upload",
-      uploadFields: { key: "prod/shops/shop-1/x.png" },
       imageUrl: "https://media.inkwell.app/prod/shops/shop-1/x.png",
       objectKey: "prod/shops/shop-1/x.png",
     });
@@ -250,11 +269,22 @@ describe("requestPortfolioUploadUrl / confirmPortfolioImage (BR-2, BR-7)", () =>
     mockAddPortfolioImageRow.mockResolvedValue(PORTFOLIO_IMAGE);
 
     await confirmPortfolioImage("shop-1", "user-1", "https://media.inkwell.app/prod/x.png");
+    expect(mockVerifyUploadedImageSize).toHaveBeenCalledWith("https://media.inkwell.app/prod/x.png");
     expect(mockAddPortfolioImageRow).toHaveBeenCalledWith(
       "shop-1",
       "https://media.inkwell.app/prod/x.png",
       { title: null, caption: null, tags: [], listingId: null },
     );
+  });
+
+  it("rejects an oversized upload caught by the post-upload size check (BR-7)", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockVerifyUploadedImageSize.mockRejectedValueOnce(new InvalidImageError("Image must be under 5MB."));
+
+    await expect(
+      confirmPortfolioImage("shop-1", "user-1", "https://media.inkwell.app/prod/x.png"),
+    ).rejects.toThrow(InvalidImageError);
+    expect(mockAddPortfolioImageRow).not.toHaveBeenCalled();
   });
 
   it("passes title/caption/tags through when provided", async () => {

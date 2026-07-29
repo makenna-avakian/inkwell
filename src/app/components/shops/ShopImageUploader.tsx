@@ -41,24 +41,21 @@ export default function ShopImageUploader({
     try {
       const {
         uploadUrl,
-        uploadFields,
         imageUrl: newImageUrl,
         error: requestError,
       } = await requestUploadUrlAction(shopId, file.name, file.type, file.size);
-      if (requestError || !uploadUrl || !uploadFields || !newImageUrl) {
+      if (requestError || !uploadUrl || !newImageUrl) {
         setError(requestError ?? "Couldn't start upload.");
         return;
       }
 
-      const formData = new FormData();
-      for (const [key, value] of Object.entries(uploadFields)) {
-        formData.set(key, value);
-      }
-      formData.set("file", file);
-
       let uploadResponse: Response;
       try {
-        uploadResponse = await fetch(uploadUrl, { method: "POST", body: formData });
+        uploadResponse = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
       } catch {
         // A network-level failure here (rather than a non-2xx response) usually
         // means the storage bucket's CORS policy doesn't allow this origin.

@@ -14,19 +14,23 @@ vi.mock("@/server/listings/repository", () => ({
 vi.mock("@/server/shops/storage", () => ({
   createPresignedUpload: vi.fn(),
   validateImageUpload: vi.fn(),
+  verifyUploadedImageSize: vi.fn(),
+  InvalidImageError: class InvalidImageError extends Error {},
 }));
 
 import {
+  addListingImageRow,
   createListingRow,
   findListingWithShopOwner,
   setListingStatusRow,
   updateListingRow,
 } from "@/server/listings/repository";
-import { validateImageUpload } from "@/server/shops/storage";
+import { InvalidImageError, validateImageUpload, verifyUploadedImageSize } from "@/server/shops/storage";
 import {
   ListingValidationError,
   NotListingOwnerError,
   addListingImage,
+  confirmListingImage,
   createListing,
   setListingStatus,
   updateListing,
@@ -37,6 +41,8 @@ const mockFindListingWithShopOwner = vi.mocked(findListingWithShopOwner);
 const mockUpdateListingRow = vi.mocked(updateListingRow);
 const mockSetListingStatusRow = vi.mocked(setListingStatusRow);
 const mockValidateImageUpload = vi.mocked(validateImageUpload);
+const mockVerifyUploadedImageSize = vi.mocked(verifyUploadedImageSize);
+const mockAddListingImageRow = vi.mocked(addListingImageRow);
 
 const LISTING = {
   id: "listing-1",
@@ -140,5 +146,44 @@ describe("addListingImage (BR-5: reuses Unit 2's validation)", () => {
     });
     await addListingImage("listing-1", "owner-1", "a.png", "image/png", 1000);
     expect(mockValidateImageUpload).toHaveBeenCalledWith("image/png", 1000);
+  });
+});
+
+describe("confirmListingImage (BR-7: post-upload size check)", () => {
+  it("confirms the image only for the owner", async () => {
+    mockFindListingWithShopOwner.mockResolvedValue({ listing: LISTING, shopUserId: "owner-1" });
+    mockAddListingImageRow.mockResolvedValue({
+      id: "img-1",
+      listingId: "listing-1",
+      imageUrl: "https://media.inkwell.app/prod/listing.png",
+      position: 0,
+    });
+
+    await confirmListingImage("listing-1", "owner-1", "https://media.inkwell.app/prod/listing.png");
+    expect(mockVerifyUploadedImageSize).toHaveBeenCalledWith(
+      "https://media.inkwell.app/prod/listing.png",
+    );
+    expect(mockAddListingImageRow).toHaveBeenCalledWith(
+      "listing-1",
+      "https://media.inkwell.app/prod/listing.png",
+    );
+  });
+
+  it("rejects a non-owner", async () => {
+    mockFindListingWithShopOwner.mockResolvedValue({ listing: LISTING, shopUserId: "owner-1" });
+    await expect(
+      confirmListingImage("listing-1", "someone-else", "https://media.inkwell.app/prod/listing.png"),
+    ).rejects.toThrow(NotListingOwnerError);
+    expect(mockVerifyUploadedImageSize).not.toHaveBeenCalled();
+  });
+
+  it("rejects an oversized upload caught by the post-upload size check", async () => {
+    mockFindListingWithShopOwner.mockResolvedValue({ listing: LISTING, shopUserId: "owner-1" });
+    mockVerifyUploadedImageSize.mockRejectedValueOnce(new InvalidImageError("Image must be under 5MB."));
+
+    await expect(
+      confirmListingImage("listing-1", "owner-1", "https://media.inkwell.app/prod/listing.png"),
+    ).rejects.toThrow(InvalidImageError);
+    expect(mockAddListingImageRow).not.toHaveBeenCalled();
   });
 });

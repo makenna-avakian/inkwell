@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createPresignedUpload, validateImageUpload } from "@/server/shops/storage";
+import { createPresignedUpload, validateImageUpload, verifyUploadedImageSize } from "@/server/shops/storage";
 import {
   addListingImageRow,
   createListingRow,
@@ -100,6 +100,7 @@ export async function confirmListingImage(
   imageUrl: string,
 ) {
   await assertListingOwner(listingId, callerId);
+  await verifyUploadedImageSize(imageUrl);
   return addListingImageRow(listingId, imageUrl);
 }
 

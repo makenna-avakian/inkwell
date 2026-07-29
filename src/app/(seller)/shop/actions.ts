@@ -113,7 +113,6 @@ export async function updateShopAction(
 
 export interface RequestUploadResult {
   uploadUrl?: string;
-  uploadFields?: Record<string, string>;
   imageUrl?: string;
   error?: string;
 }
@@ -126,14 +125,14 @@ export async function requestPortfolioUploadUrlAction(
 ): Promise<RequestUploadResult> {
   try {
     const userId = await requireSession();
-    const { uploadUrl, uploadFields, imageUrl } = await requestPortfolioUploadUrl(
+    const { uploadUrl, imageUrl } = await requestPortfolioUploadUrl(
       shopId,
       userId,
       fileName,
       contentType,
       sizeBytes,
     );
-    return { uploadUrl, uploadFields, imageUrl };
+    return { uploadUrl, imageUrl };
   } catch (error) {
     if (error instanceof InvalidImageError || error instanceof NotShopOwnerError) {
       return { error: error.message };
@@ -232,14 +231,14 @@ export async function requestBannerUploadUrlAction(
 ): Promise<RequestUploadResult> {
   try {
     const userId = await requireSession();
-    const { uploadUrl, uploadFields, imageUrl } = await requestBannerUploadUrl(
+    const { uploadUrl, imageUrl } = await requestBannerUploadUrl(
       shopId,
       userId,
       fileName,
       contentType,
       sizeBytes,
     );
-    return { uploadUrl, uploadFields, imageUrl };
+    return { uploadUrl, imageUrl };
   } catch (error) {
     if (error instanceof InvalidImageError || error instanceof NotShopOwnerError) {
       return { error: error.message };
@@ -272,14 +271,14 @@ export async function requestAvatarUploadUrlAction(
 ): Promise<RequestUploadResult> {
   try {
     const userId = await requireSession();
-    const { uploadUrl, uploadFields, imageUrl } = await requestAvatarUploadUrl(
+    const { uploadUrl, imageUrl } = await requestAvatarUploadUrl(
       shopId,
       userId,
       fileName,
       contentType,
       sizeBytes,
     );
-    return { uploadUrl, uploadFields, imageUrl };
+    return { uploadUrl, imageUrl };
   } catch (error) {
     if (error instanceof InvalidImageError || error instanceof NotShopOwnerError) {
       return { error: error.message };

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { parseBlocks, type ContentBlock } from "@/server/shops/blocks";
 import { computeNextVersion } from "@/server/shops/versioning";
-import { createPresignedUpload, validateImageUpload } from "@/server/shops/storage";
+import { createPresignedUpload, validateImageUpload, verifyUploadedImageSize } from "@/server/shops/storage";
 import {
   addPortfolioImageRow,
   createShopProfile,
@@ -159,6 +159,7 @@ export async function confirmPortfolioImage(
   rawMetadata?: unknown,
 ) {
   await assertOwner(shopId, callerId);
+  await verifyUploadedImageSize(imageUrl);
 
   let metadata: PortfolioImageMetadataInput;
   try {
@@ -267,6 +268,7 @@ export async function requestBannerUploadUrl(
 
 export async function confirmBannerImage(shopId: string, callerId: string, imageUrl: string) {
   await assertOwner(shopId, callerId);
+  await verifyUploadedImageSize(imageUrl);
   return updateShopProfile(shopId, { bannerImageUrl: imageUrl });
 }
 
@@ -282,6 +284,7 @@ export async function requestAvatarUploadUrl(
 
 export async function confirmAvatarImage(shopId: string, callerId: string, imageUrl: string) {
   await assertOwner(shopId, callerId);
+  await verifyUploadedImageSize(imageUrl);
   return updateShopProfile(shopId, { avatarImageUrl: imageUrl });
 }
 

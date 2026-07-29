@@ -1,5 +1,5 @@
-import { S3Client } from "@aws-sdk/client-s3";
-import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
+import { DeleteObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const PRESIGN_EXPIRY_SECONDS = 5 * 60; // BR: short-lived (nfr-requirements.md)
 const CALL_TIMEOUT_MS = 5_000; // nfr-design-patterns.md Question 1: A
@@ -19,6 +19,10 @@ function client(): S3Client {
   return new S3Client({
     region: "auto",
     endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    // Cloudflare's own recommendation for the AWS SDK against R2 — R2 also
+    // doesn't implement the S3 "POST Object" presigned-POST operation (only
+    // presigned PUT), which is why this generates PUT URLs below.
+    forcePathStyle: true,
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID!,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
@@ -56,21 +60,18 @@ export function validateImageUpload(contentType: string, sizeBytes: number): voi
 
 export interface PresignedUpload {
   uploadUrl: string;
-  /** multipart/form-data fields the client must send alongside the file, in order, file last. */
-  uploadFields: Record<string, string>;
   imageUrl: string;
   objectKey: string;
 }
 
 /**
- * Generates a presigned POST scoped to a single object key and content type,
- * with a server-enforced content-length-range condition (a plain presigned
- * PUT URL only signs the object key/content-type — R2/S3 never checks the
- * body size against it, so a caller could request a URL for a declared 1KB
- * file and then PUT gigabytes through it, since validateImageUpload only
- * checks the caller-declared size, not the real upload). The POST policy's
- * conditions are enforced by R2 itself at upload time, so an oversized or
- * wrong-content-type upload is rejected before it's ever stored.
+ * Generates a presigned PUT URL scoped to a single object key and content
+ * type. R2 does not implement the S3 "POST Object" (presigned-POST/form)
+ * operation used by some S3-compatible upload flows — attempting it returns
+ * a 501 Not Implemented — so this signs a plain PUT instead, which R2 does
+ * support. Unlike a presigned POST policy, a presigned PUT can't have R2
+ * itself enforce a content-length-range condition at upload time — see
+ * verifyUploadedImageSize below for the compensating check.
  */
 export async function createPresignedUpload(
   objectKeyPath: string,
@@ -80,25 +81,43 @@ export async function createPresignedUpload(
   const objectKey = `${environmentPrefix}/${objectKeyPath}`;
   const bucket = process.env.R2_BUCKET_NAME!;
 
-  const { url, fields } = await withOneRetry(() =>
-    createPresignedPost(client(), {
-      Bucket: bucket,
-      Key: objectKey,
-      Conditions: [
-        ["content-length-range", 1, MAX_FILE_SIZE_BYTES],
-        ["eq", "$Content-Type", contentType],
-      ],
-      Fields: {
-        "Content-Type": contentType,
-      },
-      Expires: PRESIGN_EXPIRY_SECONDS,
-    }),
+  const uploadUrl = await withOneRetry(() =>
+    getSignedUrl(
+      client(),
+      new PutObjectCommand({ Bucket: bucket, Key: objectKey, ContentType: contentType }),
+      { expiresIn: PRESIGN_EXPIRY_SECONDS },
+    ),
   );
 
   return {
-    uploadUrl: url,
-    uploadFields: fields,
+    uploadUrl,
     imageUrl: `${process.env.R2_PUBLIC_URL}/${objectKey}`,
     objectKey,
   };
+}
+
+/**
+ * BR-7 compensating control: since a presigned PUT (unlike the presigned
+ * POST R2 doesn't support) can't have R2 itself reject an oversized body at
+ * upload time, this re-checks the actual stored object's size immediately
+ * after upload — a caller could otherwise request a URL for a declared 1KB
+ * file and then PUT an arbitrarily large one straight through it, bypassing
+ * validateImageUpload's caller-declared-size check entirely. Deletes the
+ * object and throws if it's missing or over the limit, so an oversized
+ * upload never gets persisted as a real portfolio/listing/shop image.
+ */
+export async function verifyUploadedImageSize(imageUrl: string): Promise<void> {
+  const publicUrlPrefix = `${process.env.R2_PUBLIC_URL}/`;
+  if (!imageUrl.startsWith(publicUrlPrefix)) {
+    throw new InvalidImageError("Couldn't verify the uploaded image.");
+  }
+  const objectKey = imageUrl.slice(publicUrlPrefix.length);
+  const bucket = process.env.R2_BUCKET_NAME!;
+  const s3 = client();
+
+  const { ContentLength } = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: objectKey }));
+  if (ContentLength === undefined || ContentLength > MAX_FILE_SIZE_BYTES) {
+    await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: objectKey })).catch(() => {});
+    throw new InvalidImageError("Image must be under 5MB.");
+  }
 }

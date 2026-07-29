@@ -159,7 +159,6 @@ describe("requestReferenceUploadAction", () => {
   it("returns the upload URL and image URL on success", async () => {
     mockRequestReferenceImageUpload.mockResolvedValue({
       uploadUrl: "https://r2.example.com/put",
-      uploadFields: { key: "requests/ref.png" },
       imageUrl: "https://media.example.com/ref.png",
       objectKey: "requests/ref.png",
     });
