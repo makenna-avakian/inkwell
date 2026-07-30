@@ -20,6 +20,7 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
   afterEach(async () => {
     // shopCommissionSettings.currentVersionId FKs to commissionRuleVersions —
     // must be cleared first or the FK constraint blocks the version delete.
+    await db.delete(schema.galleryWallSettings);
     await db.delete(schema.shopCommissionSettings);
     await db.delete(schema.commissionRuleVersions);
     await db.delete(schema.portfolioImages);
@@ -219,5 +220,37 @@ describe.skipIf(!process.env.DATABASE_URL)("shops repository (integration)", () 
     await repo.setFeaturedPortfolioImageRow(shop.id, second.id);
     expect((await repo.findPortfolioImageById(first.id))?.featured).toBe(false);
     expect((await repo.findPortfolioImageById(second.id))?.featured).toBe(true);
+  });
+
+  it("returns undefined gallery wall settings when none have been saved yet", async () => {
+    const user = await createTestUser("gallery-wall-unset@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+
+    expect(await repo.getGalleryWallSettings(shop.id)).toBeUndefined();
+  });
+
+  it("saves gallery wall settings, then upserts on a second save", async () => {
+    const user = await createTestUser("gallery-wall-save@example.com");
+    const shop = await repo.createShopProfile({ userId: user.id, socialLinks: [] });
+    const image = await repo.addPortfolioImageRow(shop.id, "https://x/1.png");
+
+    const created = await repo.saveGalleryWallSettings(shop.id, {
+      frameColor: "walnut",
+      frameStyle: "thin",
+      pieces: [{ portfolioImageId: image.id, x: 50, y: 15 }],
+    });
+    expect(created.frameColor).toBe("walnut");
+    expect(created.pieces).toEqual([{ portfolioImageId: image.id, x: 50, y: 15 }]);
+
+    const updated = await repo.saveGalleryWallSettings(shop.id, {
+      frameColor: "gold",
+      frameStyle: "floating",
+      pieces: [{ portfolioImageId: image.id, x: 30, y: 20 }],
+    });
+    expect(updated.frameColor).toBe("gold");
+    expect(updated.frameStyle).toBe("floating");
+    expect(updated.pieces).toEqual([{ portfolioImageId: image.id, x: 30, y: 20 }]);
+
+    expect((await repo.getGalleryWallSettings(shop.id))?.frameColor).toBe("gold");
   });
 });

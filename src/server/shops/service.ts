@@ -10,11 +10,13 @@ import {
   findShopById,
   findShopByUserId,
   getExistingVersionNumbers,
+  getGalleryWallSettings as getGalleryWallSettingsRow,
   getRuleVersionById,
   getShopCommissionSettings,
   insertRuleVersion,
   listPortfolioImages,
   reorderPortfolioImagesRow,
+  saveGalleryWallSettings,
   setCurrentVersion,
   setFeaturedPortfolioImageRow,
   setMaxQueueRow,
@@ -376,4 +378,54 @@ export async function getPublishedRuleSet(shopId: string): Promise<PublishedRule
   if (!version) return null;
 
   return { version, slotState: settings.slotState, maxQueue: settings.maxQueue };
+}
+
+const galleryWallPieceSchema = z.object({
+  portfolioImageId: z.string().uuid(),
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+});
+
+export const galleryWallLayoutSchema = z.object({
+  frameColor: z.enum(["black", "walnut", "white", "gold"]),
+  frameStyle: z.enum(["thin", "classic", "floating"]),
+  pieces: z.array(galleryWallPieceSchema).max(5), // BR: keeps the wall uncluttered
+});
+export type GalleryWallLayoutInput = z.infer<typeof galleryWallLayoutSchema>;
+
+/** Public read — no ownership check, used both by the owner's own editor and the public shop page. */
+export async function getGalleryWallSettings(shopId: string) {
+  return getGalleryWallSettingsRow(shopId);
+}
+
+/** BR: every piece must belong to this shop's own portfolio — otherwise a saved layout could reference another shop's image. */
+export async function saveGalleryWallLayout(shopId: string, callerId: string, rawInput: unknown) {
+  await assertOwner(shopId, callerId);
+
+  let parsed: GalleryWallLayoutInput;
+  try {
+    parsed = galleryWallLayoutSchema.parse(rawInput);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new PortfolioImageValidationError(
+        error.issues[0]?.message ?? "Invalid gallery wall layout.",
+      );
+    }
+    throw error;
+  }
+
+  const existing = await listPortfolioImages(shopId);
+  const existingIds = new Set(existing.map((image) => image.id));
+  const allBelongToShop = parsed.pieces.every((piece) => existingIds.has(piece.portfolioImageId));
+  if (!allBelongToShop) {
+    throw new PortfolioImageValidationError(
+      "One or more selected pieces don't belong to this shop's portfolio.",
+    );
+  }
+
+  return saveGalleryWallSettings(shopId, {
+    frameColor: parsed.frameColor,
+    frameStyle: parsed.frameStyle,
+    pieces: parsed.pieces,
+  });
 }

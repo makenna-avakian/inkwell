@@ -2,11 +2,14 @@ import { and, asc, eq, max } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import {
   commissionRuleVersions,
+  galleryWallSettings,
   portfolioImages,
   shopCommissionSettings,
   shopProfiles,
   type CommissionRuleVersion,
+  type GalleryWallSettings,
   type NewCommissionRuleVersion,
+  type NewGalleryWallSettings,
   type NewPortfolioImage,
   type NewShopProfile,
   type PortfolioImage,
@@ -218,4 +221,31 @@ export async function setMaxQueueRow(shopId: string, maxQueue: number | null) {
     .where(eq(shopCommissionSettings.shopId, shopId))
     .returning();
   return settings;
+}
+
+export async function getGalleryWallSettings(
+  shopId: string,
+): Promise<GalleryWallSettings | undefined> {
+  const [row] = await db
+    .select()
+    .from(galleryWallSettings)
+    .where(eq(galleryWallSettings.shopId, shopId))
+    .limit(1);
+  return row;
+}
+
+/** Created lazily on first save — unlike shopCommissionSettings, not auto-created alongside the shop. */
+export async function saveGalleryWallSettings(
+  shopId: string,
+  input: Pick<NewGalleryWallSettings, "frameColor" | "frameStyle" | "pieces">,
+): Promise<GalleryWallSettings> {
+  const [row] = await db
+    .insert(galleryWallSettings)
+    .values({ shopId, ...input })
+    .onConflictDoUpdate({
+      target: galleryWallSettings.shopId,
+      set: { ...input, updatedAt: new Date() },
+    })
+    .returning();
+  return row;
 }

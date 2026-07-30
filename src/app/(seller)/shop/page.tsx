@@ -5,6 +5,7 @@ import { getShopPortfolio } from "@/server/shops/service";
 import { getShopStripeAccountId } from "@/server/orders/repository";
 import { hasPayoutsEnabled } from "@/server/orders/payment";
 import { listAvailableListingsForShop } from "@/server/listings/repository";
+import Link from "next/link";
 import ShopProfileForm from "@/app/components/shops/ShopProfileForm";
 import PortfolioManager from "@/app/components/shops/PortfolioManager";
 import ShopImageUploader from "@/app/components/shops/ShopImageUploader";
@@ -89,6 +90,20 @@ export default async function ManageShopPage() {
         }))}
         listingOptions={listings.map((l) => ({ id: l.id, title: l.title }))}
       />
+
+      <h2 className="mt-10 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">
+        Gallery Wall
+      </h2>
+      <p className="mb-3 text-sm text-muted">
+        Arrange a few of your portfolio pieces on an illustrated gallery wall visitors can walk through.
+      </p>
+      <Link
+        href={`/shops/${shop.id}/gallery`}
+        data-testid="manage-shop-gallery-wall-link"
+        className="inline-block border border-foreground px-5 py-2.5 text-xs font-medium tracking-[0.12em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent"
+      >
+        Open Gallery Wall
+      </Link>
     </main>
   );
 }

@@ -19,7 +19,8 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
   const [data, session] = await Promise.all([getShopPageData(shopId), auth()]);
   if (!data) notFound();
 
-  const { shop, portfolio, publishedRules, availableListings } = data;
+  const { shop, portfolio, publishedRules, availableListings, galleryWallSettings } = data;
+  const hasGalleryWall = Array.isArray(galleryWallSettings?.pieces) && galleryWallSettings.pieces.length > 0;
 
   return (
     <main data-testid="public-shop-page" className="mx-auto max-w-4xl p-8 pt-32">
@@ -56,6 +57,16 @@ export default async function PublicShopPage({ shopId }: PublicShopPageProps) {
             </a>
           ))}
         </div>
+      )}
+
+      {hasGalleryWall && (
+        <Link
+          href={`/shops/${shop.id}/gallery`}
+          data-testid="public-shop-page-gallery-wall-link"
+          className="mt-4 inline-block border border-foreground px-5 py-2.5 text-xs font-medium tracking-[0.12em] text-foreground uppercase transition-colors hover:border-accent hover:text-accent"
+        >
+          View Gallery Wall
+        </Link>
       )}
 
       <h2 className="mt-12 mb-4 border-t border-border pt-4 text-xs font-medium tracking-[0.15em] text-muted uppercase">

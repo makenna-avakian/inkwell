@@ -19,6 +19,8 @@ vi.mock("@/server/shops/repository", () => ({
   setCurrentVersion: vi.fn(),
   setMaxQueueRow: vi.fn(),
   setSlotStateRow: vi.fn(),
+  getGalleryWallSettings: vi.fn(),
+  saveGalleryWallSettings: vi.fn(),
 }));
 
 vi.mock("@/server/shops/storage", () => ({
@@ -40,11 +42,13 @@ import {
   findShopById,
   findShopByUserId,
   getExistingVersionNumbers,
+  getGalleryWallSettings as getGalleryWallSettingsRow,
   getRuleVersionById,
   getShopCommissionSettings,
   insertRuleVersion,
   listPortfolioImages,
   reorderPortfolioImagesRow,
+  saveGalleryWallSettings,
   setCurrentVersion,
   setFeaturedPortfolioImageRow,
   updatePortfolioImageRow,
@@ -68,6 +72,7 @@ import {
   confirmPortfolioImage,
   createShop,
   deletePortfolioImage,
+  getGalleryWallSettings,
   getPublishedRuleSet,
   isSeller,
   publishRuleSet,
@@ -75,6 +80,7 @@ import {
   requestBannerUploadUrl,
   requestPortfolioUploadUrl,
   reorderPortfolioImages,
+  saveGalleryWallLayout,
   setFeaturedPortfolioImage,
   setSlotState,
   updatePortfolioImage,
@@ -101,6 +107,8 @@ const mockCreatePresignedUpload = vi.mocked(createPresignedUpload);
 const mockValidateImageUpload = vi.mocked(validateImageUpload);
 const mockVerifyUploadedImageSize = vi.mocked(verifyUploadedImageSize);
 const mockFindListingById = vi.mocked(findListingById);
+const mockGetGalleryWallSettingsRow = vi.mocked(getGalleryWallSettingsRow);
+const mockSaveGalleryWallSettings = vi.mocked(saveGalleryWallSettings);
 
 const PORTFOLIO_IMAGE = {
   id: "img-1",
@@ -518,5 +526,84 @@ describe("getPublishedRuleSet (read path)", () => {
     const result = await getPublishedRuleSet("shop-1");
     expect(result?.slotState).toBe("open");
     expect(result?.maxQueue).toBe(3);
+  });
+});
+
+describe("getGalleryWallSettings", () => {
+  it("is a public read with no ownership check", async () => {
+    mockGetGalleryWallSettingsRow.mockResolvedValue(undefined);
+    await getGalleryWallSettings("shop-1");
+    expect(mockFindShopById).not.toHaveBeenCalled();
+    expect(mockGetGalleryWallSettingsRow).toHaveBeenCalledWith("shop-1");
+  });
+});
+
+describe("saveGalleryWallLayout", () => {
+  const PIECE_ID = "11111111-1111-1111-1111-111111111111";
+  const OTHER_SHOP_PIECE_ID = "22222222-2222-2222-2222-222222222222";
+  const VALID_INPUT = {
+    frameColor: "walnut",
+    frameStyle: "thin",
+    pieces: [{ portfolioImageId: PIECE_ID, x: 50, y: 15 }],
+  };
+
+  it("rejects a non-owner", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    await expect(
+      saveGalleryWallLayout("shop-1", "someone-else", VALID_INPUT),
+    ).rejects.toThrow(NotShopOwnerError);
+    expect(mockSaveGalleryWallSettings).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid input (bad frame color)", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    await expect(
+      saveGalleryWallLayout("shop-1", "user-1", { ...VALID_INPUT, frameColor: "chartreuse" }),
+    ).rejects.toThrow(PortfolioImageValidationError);
+  });
+
+  it("rejects more than 5 pieces", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    const pieces = Array.from({ length: 6 }, (_, i) => ({
+      portfolioImageId: `1111111${i}-1111-1111-1111-111111111111`,
+      x: 50,
+      y: 15,
+    }));
+    await expect(
+      saveGalleryWallLayout("shop-1", "user-1", { ...VALID_INPUT, pieces }),
+    ).rejects.toThrow(PortfolioImageValidationError);
+  });
+
+  it("rejects a piece that doesn't belong to this shop's portfolio", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockListPortfolioImages.mockResolvedValue([{ ...PORTFOLIO_IMAGE, id: PIECE_ID }]);
+
+    await expect(
+      saveGalleryWallLayout("shop-1", "user-1", {
+        ...VALID_INPUT,
+        pieces: [{ portfolioImageId: OTHER_SHOP_PIECE_ID, x: 50, y: 15 }],
+      }),
+    ).rejects.toThrow(PortfolioImageValidationError);
+    expect(mockSaveGalleryWallSettings).not.toHaveBeenCalled();
+  });
+
+  it("saves when every piece belongs to this shop", async () => {
+    mockFindShopById.mockResolvedValue(SHOP);
+    mockListPortfolioImages.mockResolvedValue([{ ...PORTFOLIO_IMAGE, id: PIECE_ID }]);
+    mockSaveGalleryWallSettings.mockResolvedValue({
+      shopId: "shop-1",
+      frameColor: "walnut",
+      frameStyle: "thin",
+      pieces: VALID_INPUT.pieces,
+      updatedAt: new Date(),
+    });
+
+    await saveGalleryWallLayout("shop-1", "user-1", VALID_INPUT);
+
+    expect(mockSaveGalleryWallSettings).toHaveBeenCalledWith("shop-1", {
+      frameColor: "walnut",
+      frameStyle: "thin",
+      pieces: VALID_INPUT.pieces,
+    });
   });
 });

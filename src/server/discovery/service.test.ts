@@ -9,6 +9,7 @@ vi.mock("@/server/discovery/repository", () => ({
 vi.mock("@/server/shops/service", () => ({
   getPublishedRuleSet: vi.fn(),
   getShopPortfolio: vi.fn(),
+  getGalleryWallSettings: vi.fn(),
 }));
 vi.mock("@/server/listings/repository", () => ({
   listAvailableListingsForShop: vi.fn(),
@@ -20,7 +21,7 @@ import {
   getCompletedOrderCountsByListingId,
   searchShopsQuery,
 } from "@/server/discovery/repository";
-import { getPublishedRuleSet, getShopPortfolio } from "@/server/shops/service";
+import { getGalleryWallSettings, getPublishedRuleSet, getShopPortfolio } from "@/server/shops/service";
 import { listAvailableListingsForShop } from "@/server/listings/repository";
 import { browseFeed, getShopPageData, searchShops } from "@/server/discovery/service";
 
@@ -30,6 +31,7 @@ const mockGetCompletedOrderCountsByListingId = vi.mocked(getCompletedOrderCounts
 const mockSearchShopsQuery = vi.mocked(searchShopsQuery);
 const mockGetPublishedRuleSet = vi.mocked(getPublishedRuleSet);
 const mockGetShopPortfolio = vi.mocked(getShopPortfolio);
+const mockGetGalleryWallSettings = vi.mocked(getGalleryWallSettings);
 const mockListAvailableListingsForShop = vi.mocked(listAvailableListingsForShop);
 
 const CANDIDATE = {
@@ -48,6 +50,7 @@ const CANDIDATE = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetCompletedOrderCountsByListingId.mockResolvedValue({});
+  mockGetGalleryWallSettings.mockResolvedValue(undefined);
 });
 
 describe("browseFeed (SECURITY-05: safe defaults)", () => {
@@ -164,6 +167,7 @@ describe("getShopPageData (BR-5: null, not thrown, for a nonexistent shop)", () 
   it("assembles shop, portfolio, rules, and listings for an existing shop", async () => {
     mockFindShopProfileWithOwnerName.mockResolvedValue({
       id: "shop-1",
+      userId: "user-1",
       displayName: "Jane's Studio",
       bio: null,
       bannerImageUrl: null,
@@ -173,6 +177,7 @@ describe("getShopPageData (BR-5: null, not thrown, for a nonexistent shop)", () 
     mockGetShopPortfolio.mockResolvedValue([]);
     mockGetPublishedRuleSet.mockResolvedValue(null);
     mockListAvailableListingsForShop.mockResolvedValue([]);
+    mockGetGalleryWallSettings.mockResolvedValue(undefined);
 
     const result = await getShopPageData("shop-1");
 
@@ -180,5 +185,6 @@ describe("getShopPageData (BR-5: null, not thrown, for a nonexistent shop)", () 
     expect(result?.portfolio).toEqual([]);
     expect(result?.publishedRules).toBeNull();
     expect(result?.availableListings).toEqual([]);
+    expect(result?.galleryWallSettings).toBeUndefined();
   });
 });

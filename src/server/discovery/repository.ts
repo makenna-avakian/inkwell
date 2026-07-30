@@ -135,6 +135,7 @@ export async function findShopProfileWithOwnerName(shopId: string) {
   const [row] = await db
     .select({
       id: shopProfiles.id,
+      userId: shopProfiles.userId,
       displayName: sql<string>`coalesce(${shopProfiles.shopName}, ${users.displayName})`,
       bio: shopProfiles.bio,
       bannerImageUrl: shopProfiles.bannerImageUrl,

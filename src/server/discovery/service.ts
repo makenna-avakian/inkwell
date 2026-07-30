@@ -6,7 +6,7 @@ import {
   searchShopsQuery,
 } from "@/server/discovery/repository";
 import { matchesFeedFilters, paginate, type Page } from "@/server/discovery/filters";
-import { getPublishedRuleSet, getShopPortfolio } from "@/server/shops/service";
+import { getGalleryWallSettings, getPublishedRuleSet, getShopPortfolio } from "@/server/shops/service";
 import { listAvailableListingsForShop } from "@/server/listings/repository";
 
 /** SECURITY-05: validated filter/search params — malformed input falls back
@@ -98,6 +98,7 @@ function formatSearchRow(row: Awaited<ReturnType<typeof searchShopsQuery>>[numbe
 export interface ShopPageData {
   shop: {
     id: string;
+    userId: string;
     displayName: string;
     bio: string | null;
     bannerImageUrl: string | null;
@@ -107,6 +108,7 @@ export interface ShopPageData {
   portfolio: Awaited<ReturnType<typeof getShopPortfolio>>;
   publishedRules: Awaited<ReturnType<typeof getPublishedRuleSet>>;
   availableListings: Awaited<ReturnType<typeof listAvailableListingsForShop>>;
+  galleryWallSettings: Awaited<ReturnType<typeof getGalleryWallSettings>>;
 }
 
 /** Returns null (not a thrown error) for a nonexistent shop — BR-5 / business-logic-model.md. */
@@ -114,11 +116,12 @@ export async function getShopPageData(shopId: string): Promise<ShopPageData | nu
   const shop = await findShopProfileWithOwnerName(shopId);
   if (!shop) return null;
 
-  const [portfolio, publishedRules, availableListings] = await Promise.all([
+  const [portfolio, publishedRules, availableListings, galleryWallSettings] = await Promise.all([
     getShopPortfolio(shopId),
     getPublishedRuleSet(shopId),
     listAvailableListingsForShop(shopId),
+    getGalleryWallSettings(shopId),
   ]);
 
-  return { shop, portfolio, publishedRules, availableListings };
+  return { shop, portfolio, publishedRules, availableListings, galleryWallSettings };
 }

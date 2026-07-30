@@ -22,6 +22,7 @@ const mockNotFound = vi.mocked(notFound);
 
 const BASE_SHOP = {
   id: "shop-1",
+  userId: "owner-1",
   displayName: "Jane's Studio",
   bio: null,
   bannerImageUrl: null,
@@ -35,6 +36,7 @@ function baseData(overrides: Partial<Parameters<typeof mockGetShopPageData.mockR
     portfolio: [],
     publishedRules: null,
     availableListings: [],
+    galleryWallSettings: undefined,
     ...overrides,
   } as never;
 }
@@ -69,6 +71,39 @@ describe("PublicShopPage", () => {
 
     expect(screen.getByTestId("public-shop-page-social-links")).toBeInTheDocument();
     expect(screen.getByText("Instagram")).toBeInTheDocument();
+  });
+
+  it("hides the Gallery Wall link when no layout has been saved", async () => {
+    mockGetShopPageData.mockResolvedValue(baseData());
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.queryByTestId("public-shop-page-gallery-wall-link")).not.toBeInTheDocument();
+  });
+
+  it("shows the Gallery Wall link once at least one piece is placed", async () => {
+    mockGetShopPageData.mockResolvedValue(
+      baseData({
+        galleryWallSettings: {
+          shopId: "shop-1",
+          frameColor: "black",
+          frameStyle: "classic",
+          pieces: [{ portfolioImageId: "img-1", x: 50, y: 15 }],
+          updatedAt: new Date(),
+        },
+      }),
+    );
+    mockAuth.mockResolvedValue(null as never);
+
+    const jsx = await PublicShopPage({ shopId: "shop-1" });
+    render(jsx);
+
+    expect(screen.getByTestId("public-shop-page-gallery-wall-link")).toHaveAttribute(
+      "href",
+      "/shops/shop-1/gallery",
+    );
   });
 
   it("prompts sign-in for a signed-out visitor when the slot is open", async () => {

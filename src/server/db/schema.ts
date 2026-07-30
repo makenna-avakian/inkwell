@@ -148,6 +148,28 @@ export const shopCommissionSettings = pgTable("shop_commission_settings", {
     .defaultNow(),
 });
 
+/**
+ * One row per shop, created lazily on first save (unlike
+ * shopCommissionSettings, this isn't fundamental to the core business flow
+ * so it's not auto-created alongside the shop). `pieces` is an array of
+ * { portfolioImageId: string, x: number, y: number } — x/y are percentages.
+ */
+export const galleryWallSettings = pgTable("gallery_wall_settings", {
+  shopId: uuid("shop_id")
+    .primaryKey()
+    .references(() => shopProfiles.id, { onDelete: "cascade" }),
+  frameColor: text("frame_color", { enum: ["black", "walnut", "white", "gold"] })
+    .notNull()
+    .default("black"),
+  frameStyle: text("frame_style", { enum: ["thin", "classic", "floating"] })
+    .notNull()
+    .default("classic"),
+  pieces: jsonb("pieces").notNull().default([]),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export type ShopProfile = typeof shopProfiles.$inferSelect;
 export type NewShopProfile = typeof shopProfiles.$inferInsert;
 export type PortfolioImage = typeof portfolioImages.$inferSelect;
@@ -155,6 +177,8 @@ export type NewPortfolioImage = typeof portfolioImages.$inferInsert;
 export type CommissionRuleVersion = typeof commissionRuleVersions.$inferSelect;
 export type NewCommissionRuleVersion = typeof commissionRuleVersions.$inferInsert;
 export type ShopCommissionSettings = typeof shopCommissionSettings.$inferSelect;
+export type GalleryWallSettings = typeof galleryWallSettings.$inferSelect;
+export type NewGalleryWallSettings = typeof galleryWallSettings.$inferInsert;
 
 // --- Unit 3: Listings ---
 // See aidlc-docs/construction/unit-3-listings/functional-design/domain-entities.md
