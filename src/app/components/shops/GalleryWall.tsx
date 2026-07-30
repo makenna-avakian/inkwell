@@ -20,31 +20,6 @@ const FRAME_STYLES = [
 
 const MAX_PIECES = 5;
 
-// Fixed, purely decorative silhouettes — matches the mockup's stubbed
-// "walkers" positions/opacity/scale (the mockup itself never actually
-// rendered a person graphic there).
-const WALKERS = [
-  { left: 8, bottom: 18, scale: 0.85, opacity: 0.35 },
-  { left: 32, bottom: 10, scale: 1.05, opacity: 0.55 },
-  { left: 58, bottom: 22, scale: 0.75, opacity: 0.3 },
-  { left: 80, bottom: 8, scale: 1.1, opacity: 0.6 },
-];
-
-function Walker({ left, bottom, scale, opacity }: { left: number; bottom: number; scale: number; opacity: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 48"
-      width={24 * scale}
-      height={48 * scale}
-      style={{ position: "absolute", left: `${left}%`, bottom, opacity }}
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="7" r="6" fill="#8a7f6d" />
-      <path d="M6 16 Q12 12 18 16 L20 44 L14 44 L12 26 L10 44 L4 44 Z" fill="#8a7f6d" />
-    </svg>
-  );
-}
-
 export interface GalleryWallPoolPiece {
   id: string;
   imageUrl: string;
@@ -299,7 +274,7 @@ export default function GalleryWall({
                   inset: 0,
                   height: "75%",
                   background:
-                    "repeating-linear-gradient(90deg, var(--surface) 0px, var(--surface) 130px, var(--border) 130px, var(--border) 132px)",
+                    "repeating-linear-gradient(90deg, var(--surface) 0px, var(--surface) 130px, var(--border) 130px, var(--border) 260px)",
                 }}
               />
               <div
@@ -319,14 +294,9 @@ export default function GalleryWall({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  background:
-                    "repeating-linear-gradient(90deg, #b8926b 0px, #b8926b 60px, #a67f5a 60px, #a67f5a 62px)",
+                  background: "#b8926b",
                 }}
               />
-
-              {WALKERS.map((w, i) => (
-                <Walker key={i} {...w} />
-              ))}
 
               {wallPieces.map((p) => (
                 <div
